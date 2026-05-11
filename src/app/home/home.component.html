@@ -1,0 +1,50 @@
+<main class="home-page">
+  <header class="topbar">
+    <a class="brand" routerLink="/" aria-label="Reza accueil">
+      <img class="brand__logo" src="assets/images/logo.png" alt="Reza" />
+    </a>
+
+    <nav class="topbar__nav" aria-label="Navigation principale">
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }">Restaurants</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }">Beaute / Bien etre</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }">Activites</a>
+    </nav>
+
+    @if (isAuthenticated) {
+      <a
+        class="topbar__avatar"
+        routerLink="/profile"
+        aria-label="Mon compte"
+        [style.background-image]="avatarStyle"
+        [class.topbar__avatar--image]="!!avatarStyle"
+      ></a>
+    } @else {
+      <div class="topbar__actions">
+        <a class="outline-button" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
+        <a class="solid-button" routerLink="/auth">Se connecter</a>
+      </div>
+    }
+  </header>
+
+  <section class="hero-section">
+    <h1>Book ta REZA</h1>
+
+    <div class="hero-cards">
+      @for (card of featureCards; track card.type) {
+        <a
+          class="hero-card"
+          routerLink="/etablissementrecherche"
+          [queryParams]="{ type: card.type }"
+        >
+          <img [src]="card.image" [alt]="card.title" />
+          <span>{{ card.title }}</span>
+        </a>
+      }
+    </div>
+  </section>
+
+  
+  <footer class="site-footer">
+    <p class="site-footer__note">&copy; 2026 Reza. Powered by AXYNEA Agency. All Rights Reserved.</p>
+  </footer>
+</main>

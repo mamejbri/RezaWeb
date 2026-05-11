@@ -1,0 +1,240 @@
+:host {
+  --reza-red: #df5b57;
+  --reza-ink: #1e1b1b;
+  --reza-line: #efe4e4;
+  --reza-input: #f7f5f5;
+  display: block;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.register-page {
+  min-height: 100vh;
+  padding: 18px 20px 56px;
+  background: #ffffff;
+}
+
+.register-topbar {
+  position: sticky;
+  top: 16px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  width: min(1600px, 100%);
+  margin: 0 auto;
+  margin-top: 16px;
+  padding: 18px 28px;
+  border-radius: 24px;
+  background: #f8f6f6;
+  box-shadow: 0 12px 30px rgba(17, 17, 17, 0.06);
+}
+
+.register-brand {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.register-brand__logo {
+  display: block;
+  width: 86px;
+  height: auto;
+}
+
+.register-nav,
+.register-topbar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 58px;
+  flex-wrap: wrap;
+}
+
+.register-nav a {
+  color: #141414;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.register-topbar__actions {
+  gap: 20px;
+}
+
+.register-avatar {
+  width: 88px;
+  aspect-ratio: 1;
+  justify-self: end;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #d7edf6 0 28%, #a4c3d6 29%, #a4c3d6 42%, #2f3556 43%, #2f3556 100%);
+  box-shadow: 0 10px 20px rgba(17, 17, 17, 0.08);
+}
+
+.register-avatar--image {
+  background-color: #ece7e7;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.register-topbar__pro,
+.register-topbar__login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: 0 38px;
+  border-radius: 14px;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.register-topbar__pro {
+  border: 1px solid var(--reza-red);
+  background: #ffffff;
+  color: var(--reza-red);
+}
+
+.register-topbar__login {
+  background: #cf3232;
+  color: #ffffff;
+}
+
+.register-panel {
+  width: min(100%, 800px);
+  margin: 0 auto;
+  padding-top: 2px;
+}
+
+.register-panel h1 {
+  margin: -4px 0 34px;
+  text-align: center;
+  color: #111111;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.register-form {
+  display: grid;
+  gap: 22px;
+}
+
+.register-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.register-field input {
+  width: 100%;
+  height: 86px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--reza-input);
+  color: #1a1a1a;
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+}
+
+.register-field input:focus {
+  box-shadow: 0 0 0 2px rgba(223, 91, 87, 0.18);
+}
+
+.register-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  width: fit-content;
+  margin-top: 10px;
+  color: #1a1a1a;
+  font-size: 0.95rem;
+  font-style: italic;
+  text-decoration: underline;
+}
+
+.register-check input {
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  accent-color: #d9d9d9;
+}
+
+.register-button {
+  width: 100%;
+  height: 68px;
+  border: 0;
+  border-radius: 12px;
+  background: #cf3232;
+  color: #ffffff;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.register-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 34px 0 28px;
+}
+
+.register-divider span {
+  width: 180px;
+  height: 1px;
+  background: #2a2a2a;
+}
+
+.register-divider strong {
+  color: #1a1a1a;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.register-footnote {
+  margin: 0;
+  text-align: center;
+  color: #111111;
+  font-size: 1rem;
+}
+
+@media (max-width: 640px) {
+  .register-page {
+    padding: 16px;
+  }
+
+  .register-topbar {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 18px;
+  }
+
+  .register-nav,
+  .register-topbar__actions {
+    gap: 18px;
+  }
+
+  .register-avatar {
+    justify-self: center;
+  }
+
+  .register-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .register-field input {
+    height: 76px;
+    border-radius: 18px;
+  }
+
+  .register-divider span {
+    width: 96px;
+  }
+}

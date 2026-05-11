@@ -1,0 +1,143 @@
+<main class="search-page">
+  <header class="search-topbar">
+    <a class="search-brand" routerLink="/" aria-label="Reza accueil">
+      <img class="search-brand__logo" src="assets/images/logo.png" alt="Reza" />
+    </a>
+
+    <nav class="search-nav" aria-label="Navigation principale">
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }">Restaurants</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }">Beaute / Bien etre</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }">Activites</a>
+    </nav>
+
+    @if (isAuthenticated) {
+      <a
+        class="search-avatar"
+        routerLink="/profile"
+        aria-label="Profil utilisateur"
+        [style.background-image]="avatarStyle"
+        [class.search-avatar--image]="!!avatarStyle"
+      ></a>
+    } @else {
+      <div class="search-topbar__actions">
+        <a class="search-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
+        <a class="search-topbar__login" routerLink="/auth">Se connecter</a>
+      </div>
+    }
+  </header>
+
+  <section class="search-summary">
+    <div class="search-summary__content">
+      <h1>{{ selectedTypeLabel }}</h1>
+      <p>A tout moment</p>
+    </div>
+  </section>
+
+  <section class="filters">
+    @if (filtersLoading) {
+      <span class="filter-chip filter-chip--status">Chargement des filtres...</span>
+    } @else {
+      <button class="filter-chip" type="button">
+        <span class="filter-chip__icon filter-chip__icon--sort" aria-hidden="true"></span>
+        Trier par note
+      </button>
+
+      @for (group of filterGroups; track group.group) {
+        <button
+          class="filter-chip"
+          [class.filter-chip--active]="selectedCount(group.group) > 0"
+          type="button"
+          (click)="openFilterGroup(group)"
+        >
+          <span
+            [class]="'filter-chip__icon filter-chip__icon--' + groupIcon(group.group)"
+            aria-hidden="true"
+          ></span>
+          {{ groupLabel(group.group) }}
+          @if (selectedCount(group.group) > 0) {
+            <span class="filter-chip__count">{{ selectedCount(group.group) }}</span>
+          }
+        </button>
+      }
+
+      @if (hasSelectedFilters) {
+        <button class="filter-chip filter-chip--clear" type="button" (click)="clearFilters()">
+          Effacer les filtres
+        </button>
+      }
+    }
+  </section>
+
+  @if (activeFilterGroup) {
+    <section class="filter-overlay" (click)="closeFilterDrawer()"></section>
+    <aside class="filter-drawer" role="dialog" aria-modal="true">
+      <div class="filter-drawer__header">
+        <h2>Filtrer par {{ groupLabel(activeFilterGroup.group).toLowerCase() }}</h2>
+        <button class="filter-drawer__close" type="button" aria-label="Fermer les filtres" (click)="closeFilterDrawer()">
+          X
+        </button>
+      </div>
+
+      <div class="filter-drawer__options">
+        @for (option of activeFilterGroup.options; track option.id) {
+          <button
+            class="filter-drawer__option"
+            [class.filter-drawer__option--active]="isFilterSelected(activeFilterGroup.group, option)"
+            type="button"
+            (click)="toggleFilter(activeFilterGroup.group, option)"
+          >
+            {{ option.libelle }}
+          </button>
+        }
+      </div>
+    </aside>
+  }
+
+  @if (loading) {
+    <section class="empty-state">
+      <h2>chargement...</h2>
+    </section>
+  } @else if (error) {
+    <section class="empty-state">
+      <h2>impossible de charger les etablissements</h2>
+    </section>
+  } @else if (etablissements.length === 0) {
+    <section class="empty-state">
+      <h2>aucun etablissement avec cette recherche</h2>
+    </section>
+  } @else {
+    <section class="etablissement-grid">
+      @for (etablissement of etablissements; track etablissement.id) {
+        <a
+          class="etablissement-card"
+          [routerLink]="['/reservation', etablissement.id]"
+          (click)="rememberReservation(etablissement.id)"
+        >
+          <div
+            class="etablissement-card__media"
+            [style.background-image]="
+              etablissement.imageUrl
+                ? 'linear-gradient(rgba(0,0,0,0.03), rgba(0,0,0,0.03)), url(' + etablissement.imageUrl + ')'
+                : null
+            "
+            [class.etablissement-card__media--fallback]="!etablissement.imageUrl"
+          ></div>
+
+          <div class="etablissement-card__body">
+            <h2>{{ etablissement.name }}</h2>
+
+            <p class="etablissement-card__address">
+              <span class="etablissement-card__icon">Lieu</span>
+              {{ etablissement.address }}
+            </p>
+
+            <p class="etablissement-card__rating">
+              <span class="etablissement-card__icon">Note</span>
+              {{ etablissement.rating }}
+            </p>
+          </div>
+        </a>
+      }
+    </section>
+  }
+</main>

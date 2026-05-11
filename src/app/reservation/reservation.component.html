@@ -1,0 +1,339 @@
+<main class="reservation-page">
+  <header class="reservation-topbar">
+    <a class="reservation-brand" routerLink="/" aria-label="Reza accueil">
+      <img class="reservation-brand__logo" src="assets/images/logo.png" alt="Reza" />
+    </a>
+
+    <nav class="reservation-nav" aria-label="Navigation principale">
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }">Restaurants</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }">Beaute / Bien etre</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }">Activites</a>
+    </nav>
+
+    @if (isAuthenticated) {
+      <a
+        class="reservation-avatar"
+        routerLink="/profile"
+        aria-label="Profil utilisateur"
+        [style.background-image]="avatarStyle"
+        [class.reservation-avatar--image]="!!avatarStyle"
+      ></a>
+    } @else {
+      <div class="reservation-topbar__actions">
+        <a class="reservation-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
+        <a class="reservation-topbar__login" routerLink="/auth">Se connecter</a>
+      </div>
+    }
+  </header>
+
+  @if (loading) {
+    <section class="reservation-status">
+      <p>Chargement de l'etablissement...</p>
+    </section>
+  } @else if (errorMessage) {
+    <section class="reservation-status reservation-status--error">
+      <p>{{ errorMessage }}</p>
+    </section>
+  } @else {
+    <section class="reservation-layout">
+      <section class="reservation-gallery">
+        <div
+          class="reservation-gallery__hero reservation-gallery__hero--image"
+          [style.background-image]="'url(' + heroImage + ')'"
+        ></div>
+
+        <div class="reservation-gallery__thumbs-container">
+          <div class="reservation-gallery__thumbs" #thumbsContainer>
+            @for (item of gallery; track item) {
+              <button
+                class="reservation-gallery__thumb"
+                [class.reservation-gallery__thumb--active]="$index === activeImageIndex"
+                type="button"
+                [attr.aria-label]="'Image ' + ($index + 1)"
+                (click)="chooseImage($index)"
+              >
+                <img [src]="item" alt="" />
+              </button>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="reservation-panel">
+        <button class="reservation-back" type="button" (click)="returnToSearch()">Retour</button>
+
+        <h1>{{ displayName }}</h1>
+
+        <div class="reservation-meta">
+          <p><span>📍</span> {{ displayAddress }}</p>
+          <p><span>★</span> {{ displayRating }}</p>
+        </div>
+
+        <div class="reservation-tabs">
+          <button
+            class="reservation-tabs__item"
+            [class.reservation-tabs__item--active]="activeTab === 'rendezvous'"
+            type="button"
+            (click)="setTab('rendezvous')"
+          >
+            Rendez-vous
+          </button>
+          @if (isRestaurant) {
+            <button
+              class="reservation-tabs__item"
+              [class.reservation-tabs__item--active]="activeTab === 'menu'"
+              type="button"
+              (click)="setTab('menu')"
+            >
+              Menu
+            </button>
+          }
+          <button
+            class="reservation-tabs__item"
+            [class.reservation-tabs__item--active]="activeTab === 'avis'"
+            type="button"
+            (click)="setTab('avis')"
+          >
+            Avis
+          </button>
+          <button
+            class="reservation-tabs__item"
+            [class.reservation-tabs__item--active]="activeTab === 'apropos'"
+            type="button"
+            (click)="setTab('apropos')"
+          >
+            A propos
+          </button>
+        </div>
+
+        @if (activeTab === 'rendezvous') {
+          <section class="booking-card">
+            <h2>{{ isRestaurant ? 'Je reserve ma place' : 'Je reserve ma prestation' }}</h2>
+
+            @if (!isRestaurant) {
+              <div class="booking-prestations">
+                <div class="booking-label">Choisissez une prestation</div>
+                @if (prestations.length === 0) {
+                  <p class="booking-message">Aucune prestation disponible.</p>
+                } @else {
+                  <div class="booking-prestations__list">
+                    @for (prestation of prestations; track prestation.id) {
+                      <button
+                        class="booking-prestations__item"
+                        [class.booking-prestations__item--active]="selectedPrestation?.id === prestation.id"
+                        type="button"
+                        (click)="selectPrestation(prestation)"
+                      >
+                        <div class="booking-prestations__name">{{ prestation.nom }}</div>
+                        @if (prestation.description) {
+                          <div class="booking-prestations__description">{{ prestation.description }}</div>
+                        }
+                        <div class="booking-prestations__price">
+                          @if (prestation.prixFixe) {
+                            {{ prestation.prixFixe }} EUR
+                          } @else if (prestation.prixMin && prestation.prixMax) {
+                            {{ prestation.prixMin }}-{{ prestation.prixMax }} EUR
+                          } @else {
+                            Prix sur demande
+                          }
+                        </div>
+                        @if (prestation.durationMinutes) {
+                          <div class="booking-prestations__duration">{{ prestation.durationMinutes }} min</div>
+                        }
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="booking-row booking-row--counter">
+                <strong>Nombre de personnes :</strong>
+                <div class="booking-counter">
+                  <button type="button" (click)="updatePeople(-1)">-</button>
+                  <span>{{ selectedPeople }}</span>
+                  <button type="button" (click)="updatePeople(1)">+</button>
+                </div>
+              </div>
+            }
+
+            <div class="booking-label">Pour le</div>
+            <label class="booking-date" (pointerdown)="openDatePicker(dateInput)">
+              <span class="booking-date__text">{{ selectedDateLabel }}</span>
+              <input
+                #dateInput
+                name="selectedDate"
+                class="booking-date__input"
+                type="date"
+                [(ngModel)]="selectedDate"
+                (change)="onDateChanged()"
+                [attr.min]="minBookableDate"
+                [attr.max]="maxBookableDate"
+                aria-label="Choisir une date"
+              />
+            </label>
+
+            <div class="booking-label">A</div>
+            <div class="booking-slots">
+              @if (slotsLoading) {
+                <p class="booking-message">Chargement des creneaux...</p>
+              } @else if (availabilityMessage) {
+                <p class="booking-message">{{ availabilityMessage }}</p>
+              } @else if (isRestaurant) {
+                <div class="booking-slots__row">
+                  <span class="booking-slots__period">Midi</span>
+                  @for (slot of midiSlots; track slot) {
+                    <button
+                      class="booking-slots__time"
+                      [class.booking-slots__time--active]="selectedTime === slot"
+                      type="button"
+                      (click)="selectTime(slot)"
+                    >
+                      {{ slot }}
+                    </button>
+                  }
+                </div>
+
+                <div class="booking-slots__row">
+                  <span class="booking-slots__period">Soir</span>
+                  @for (slot of soirSlots; track slot) {
+                    <button
+                      class="booking-slots__time"
+                      [class.booking-slots__time--active]="selectedTime === slot"
+                      type="button"
+                      (click)="selectTime(slot)"
+                    >
+                      {{ slot }}
+                    </button>
+                  }
+                </div>
+              } @else {
+                @for (slot of prestationSlots; track slot) {
+                  <button
+                    class="booking-slots__time booking-slots__time--prestation"
+                    [class.booking-slots__time--active]="selectedTime === slot"
+                    type="button"
+                    (click)="selectTime(slot)"
+                  >
+                    {{ slot }}
+                  </button>
+                }
+              }
+            </div>
+
+            @if (reservationMessage) {
+              <p class="booking-message booking-message--success">{{ reservationMessage }}</p>
+            } @else if (reservationError) {
+              <p class="booking-message booking-message--error">{{ reservationError }}</p>
+            }
+
+            <button
+              class="booking-confirm"
+              type="button"
+              [disabled]="!canConfirmReservation"
+              (click)="confirmReservation()"
+            >
+              {{ reservationLoading ? 'Confirmation...' : 'Je confirme ma Reza' }}
+            </button>
+          </section>
+        } @else if (activeTab === 'menu') {
+          <section class="reservation-section">
+            @if (menuImages.length === 0) {
+              <p>Menu indisponible.</p>
+            } @else {
+              <div class="reservation-section__menu">
+                <button
+                  class="reservation-section__scroll-btn reservation-section__scroll-btn--left"
+                  type="button"
+                  (click)="scrollMenuThumbs(-1)"
+                  aria-label="Defiler le menu vers la gauche"
+                >
+                  ‹
+                </button>
+
+                <div class="reservation-section__images reservation-section__images--scroll" #menuThumbsContainer>
+                  @for (item of menuImages; track item) {
+                    <button type="button" class="reservation-section__menu-thumb" (click)="openMenuImage($index)">
+                      <img [src]="item" alt="Photo du menu" />
+                    </button>
+                  }
+                </div>
+
+                <button
+                  class="reservation-section__scroll-btn reservation-section__scroll-btn--right"
+                  type="button"
+                  (click)="scrollMenuThumbs(1)"
+                  aria-label="Defiler le menu vers la droite"
+                >
+                  ›
+                </button>
+              </div>
+            }
+          </section>
+
+          @if (isMenuViewerOpen) {
+            <section class="menu-viewer" role="dialog" aria-modal="true">
+              <button class="menu-viewer__close" type="button" (click)="closeMenuImageViewer()" aria-label="Fermer la visionneuse">×</button>
+
+              <div class="menu-viewer__content">
+                <button class="menu-viewer__nav menu-viewer__nav--left" type="button" (click)="previousMenuImage()" aria-label="Image precedente">‹</button>
+
+                <img [src]="menuImages[activeMenuImageIndex]" alt="Menu agrandi" class="menu-viewer__image" />
+
+                <button class="menu-viewer__nav menu-viewer__nav--right" type="button" (click)="nextMenuImage()" aria-label="Image suivante">›</button>
+              </div>
+
+              <div class="menu-viewer__footer">
+                <span>{{ activeMenuImageIndex + 1 }} / {{ menuImages.length }}</span>
+              </div>
+            </section>
+          }
+        } @else if (activeTab === 'avis') {
+          <section class="reservation-section">
+            @if (reviewSummary) {
+              <div class="review-summary">
+                <strong>{{ reviewSummary.average.toFixed(1).replace('.', ',') }}</strong>
+                <span>{{ reviewSummary.count }} avis</span>
+              </div>
+            }
+
+            @if (reviewsLoading) {
+              <p>Chargement des avis...</p>
+            } @else if (reviewsError) {
+              <p>{{ reviewsError }}</p>
+            } @else if (reviews.length === 0) {
+              <p>Aucun avis pour le moment.</p>
+            } @else {
+              <div class="review-list">
+                @for (review of reviews; track review.id) {
+                  <article class="review-card">
+                    <div class="review-card__header">
+                      <strong>{{ reviewAuthor(review) }}</strong>
+                      <span class="review-card__rating">{{ review.rating ?? 0 }}/5</span>
+                    </div>
+
+                    @if (review.createdDate) {
+                      <p class="review-card__date">{{ formatReviewDate(review.createdDate) }}</p>
+                    }
+
+                    <p class="review-card__content">{{ review.contenu || 'Aucun commentaire.' }}</p>
+
+                    @if (review.reponse) {
+                      <div class="review-card__reply">
+                        <strong>Reponse de l'etablissement</strong>
+                        <p>{{ review.reponse }}</p>
+                      </div>
+                    }
+                  </article>
+                }
+              </div>
+            }
+          </section>
+        } @else {
+          <section class="reservation-section">
+            <p>{{ etablissement?.description || 'Aucune description disponible.' }}</p>
+          </section>
+        }
+      </section>
+    </section>
+  }
+</main>

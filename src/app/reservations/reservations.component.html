@@ -1,0 +1,254 @@
+<main class="reservations-page">
+  <header class="reservations-topbar">
+    <a class="reservations-brand" routerLink="/" aria-label="Reza accueil">
+      <img class="reservations-brand__logo" src="assets/images/logo.png" alt="Reza" />
+    </a>
+
+    <nav class="reservations-nav" aria-label="Navigation principale">
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }">Restaurants</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }">Beaute / Bien etre</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }">Activites</a>
+    </nav>
+
+    @if (isAuthenticated) {
+      <a
+        class="reservations-avatar"
+        routerLink="/profile"
+        aria-label="Profil utilisateur"
+        [style.background-image]="avatarStyle"
+        [class.reservations-avatar--image]="!!avatarStyle"
+      ></a>
+    } @else {
+      <div class="reservations-topbar__actions">
+        <a class="reservations-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
+        <a class="reservations-topbar__login" routerLink="/auth">Se connecter</a>
+      </div>
+    }
+  </header>
+
+  <section class="reservations-layout">
+    <aside class="account-card">
+      <h1>Mon compte</h1>
+
+      <a class="account-card__button account-card__button--active" routerLink="/reservations">
+        Mes Reza
+      </a>
+      <a class="account-card__button" routerLink="/profile">Mes informations</a>
+
+      <div class="account-card__divider"></div>
+
+      <button class="account-card__button account-card__button--logout" type="button" (click)="logout()">
+        Se deconnecter
+      </button>
+    </aside>
+
+    <section class="reservations-content">
+      <div class="reservation-switch" role="tablist" aria-label="Filtrer les reservations">
+        <button
+          class="reservation-switch__button"
+          [class.reservation-switch__button--active]="view === 'future'"
+          type="button"
+          (click)="setView('future')"
+        >
+          Reza a venir
+        </button>
+        <button
+          class="reservation-switch__button"
+          [class.reservation-switch__button--active]="view === 'past'"
+          type="button"
+          (click)="setView('past')"
+        >
+          Anciennes Reza
+        </button>
+      </div>
+
+      @if (successMessage) {
+        <p class="reservation-feedback reservation-feedback--success">{{ successMessage }}</p>
+      } @else if (errorMessage) {
+        <p class="reservation-feedback reservation-feedback--error">{{ errorMessage }}</p>
+      }
+
+      @if (loading) {
+        <div class="empty-state">
+          <h2>Chargement...</h2>
+        </div>
+      } @else if (displayedReservations.length === 0) {
+        <div class="empty-state">
+          <h2>Aucune reservation</h2>
+          <p>Vous n'avez pas encore de reservation dans cette liste.</p>
+          <a class="empty-state__button" routerLink="/">Book ta REZA</a>
+        </div>
+      } @else {
+        <div class="reservation-list">
+          @for (reservation of displayedReservations; track reservation.id) {
+            <article class="reservation-item">
+              <div
+                class="reservation-item__media"
+                [class.reservation-item__media--image]="!!resolveImageUrl(reservation.imageUrl)"
+                [style.background-image]="resolveImageUrl(reservation.imageUrl) ? 'url(' + resolveImageUrl(reservation.imageUrl) + ')' : null"
+              ></div>
+
+              <div class="reservation-item__body">
+                <h2>{{ reservation.name }}</h2>
+
+                <p class="reservation-item__address">
+                  <span class="reservation-item__icon">📍</span>
+                  {{ reservation.address || 'Adresse indisponible' }}
+                </p>
+
+                @if (reservation.prestationName) {
+                  <p class="reservation-item__service">{{ reservation.prestationName }}</p>
+                } @else if (reservation.partySize) {
+                  <p class="reservation-item__service">{{ reservation.partySize }} personne(s)</p>
+                }
+
+                <div class="reservation-item__meta">
+                  <div class="reservation-badge">
+                    <span class="reservation-badge__icon">📅</span>
+                    <span>{{ formatDate(reservation.date) }}</span>
+                  </div>
+
+                  <div class="reservation-badge reservation-badge--time">
+                    <span class="reservation-badge__icon">◷</span>
+                    <span>{{ trimTime(reservation.heureDebut) }}</span>
+                  </div>
+                </div>
+
+                @if (view === 'future') {
+                  @if (editState?.reservationId === reservation.id) {
+                    @if (editState; as edit) {
+                      <div class="reservation-edit">
+                        <label>
+                          <span>Date</span>
+                          <input
+                            type="date"
+                            [ngModel]="edit.date"
+                            (ngModelChange)="setEditDate(reservation, $event)"
+                          />
+                        </label>
+
+                        <div class="reservation-edit__slots">
+                          @if (edit.loadingSlots) {
+                            <p>Chargement des creneaux...</p>
+                          } @else if (edit.error) {
+                            <p>{{ edit.error }}</p>
+                          } @else {
+                            @for (slot of edit.slots; track slot) {
+                              <button
+                                class="reservation-edit__slot"
+                                [class.reservation-edit__slot--active]="edit.time === slot"
+                                type="button"
+                                (click)="selectEditTime(slot)"
+                              >
+                                {{ slot }}
+                              </button>
+                            }
+                          }
+                        </div>
+
+                        <div class="reservation-item__actions">
+                          <button
+                            class="reservation-item__edit"
+                            type="button"
+                            [disabled]="actionLoadingId === reservation.id"
+                            (click)="updateReservation(reservation)"
+                          >
+                            Modifier ma Reza
+                          </button>
+                          <button
+                            class="reservation-item__danger"
+                            type="button"
+                            [disabled]="actionLoadingId === reservation.id"
+                            (click)="cancelReservation(reservation)"
+                          >
+                            Annuler ma Reza
+                          </button>
+                          <button class="reservation-item__ghost" type="button" (click)="cancelEdit()">Fermer</button>
+                        </div>
+                      </div>
+                    }
+                  } @else {
+                    <button
+                      class="reservation-item__edit"
+                      type="button"
+                      [disabled]="!canChangeReservation(reservation)"
+                      (click)="startEdit(reservation)"
+                    >
+                      Modifier
+                    </button>
+                  }
+                } @else {
+                  @if (hasExistingReview(reservation.id)) {
+                    <p class="reservation-item__reviewed">Avis deja laisse</p>
+                  } @else {
+                    <button class="reservation-item__edit" type="button" (click)="leaveReview(reservation)">
+                      Laisser un avis
+                    </button>
+                  }
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  </section>
+
+  @if (reviewState) {
+    <div class="review-modal__overlay" (click)="closeReviewModal()"></div>
+    <section class="review-modal" role="dialog" aria-modal="true">
+      <div class="review-modal__header">
+        <div>
+          <h2>{{ reviewState.existingReview ? 'Mon avis' : 'Laisser un avis' }}</h2>
+          <p>{{ reviewState.etablissementName }}</p>
+        </div>
+        <button class="review-modal__close" type="button" (click)="closeReviewModal()">×</button>
+      </div>
+
+      @if (reviewState.loading) {
+        <p class="review-modal__status">Chargement de l'avis...</p>
+      } @else {
+        <div class="review-modal__rating">
+          @for (star of [1, 2, 3, 4, 5]; track star) {
+            <button
+              class="review-modal__star"
+              [class.review-modal__star--active]="star <= reviewState.rating"
+              [disabled]="!!reviewState.existingReview"
+              type="button"
+              (click)="setReviewRating(star)"
+            >
+              ★
+            </button>
+          }
+        </div>
+
+        @if (reviewState.existingReview) {
+          <p class="review-modal__status">
+            Avis deja laisse par {{ reviewAuthor(reviewState.existingReview) }}
+          </p>
+        }
+
+        <label class="review-modal__field">
+          <span>Commentaire</span>
+          <textarea
+            [(ngModel)]="reviewState.contenu"
+            [readOnly]="!!reviewState.existingReview"
+            placeholder="Partagez votre experience"
+          ></textarea>
+        </label>
+
+        @if (reviewState.error) {
+          <p class="review-modal__status review-modal__status--error">{{ reviewState.error }}</p>
+        }
+
+        @if (!reviewState.existingReview) {
+          <div class="review-modal__actions">
+            <button class="review-modal__submit" type="button" [disabled]="reviewState.saving" (click)="saveReview()">
+              {{ reviewState.saving ? 'Enregistrement...' : 'Publier mon avis' }}
+            </button>
+          </div>
+        }
+      }
+    </section>
+  }
+</main>

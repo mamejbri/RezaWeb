@@ -1,0 +1,75 @@
+<main class="auth-page">
+  <header class="auth-topbar">
+    <a class="auth-brand" routerLink="/" aria-label="Reza accueil">
+      <img class="auth-brand__logo" src="assets/images/logo.png" alt="Reza" />
+    </a>
+
+    <nav class="auth-nav" aria-label="Navigation principale">
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }">Restaurants</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }">Beaute / Bien etre</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }">Activites</a>
+    </nav>
+
+    @if (isAuthenticated) {
+      <a
+        class="auth-avatar"
+        routerLink="/profile"
+        aria-label="Mon compte"
+        [style.background-image]="avatarStyle"
+        [class.auth-avatar--image]="!!avatarStyle"
+      ></a>
+    } @else {
+      <div class="auth-topbar__actions">
+        <a class="auth-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
+        <a class="auth-topbar__login" routerLink="/auth">Se connecter</a>
+      </div>
+    }
+  </header>
+
+  <section class="auth-panel">
+    <h1>Vous avez deja un compte Reza</h1>
+
+    <form class="auth-form" (ngSubmit)="login()">
+      <label class="auth-field">
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="E-mail"
+          autocomplete="email"
+        />
+      </label>
+
+      <label class="auth-field">
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="Mot de passe"
+          autocomplete="current-password"
+        />
+      </label>
+
+      <a class="auth-link" routerLink="/forgot-password">Mot de passe oublie ?</a>
+
+      @if (errorMessage) {
+        <p class="auth-error">{{ errorMessage }}</p>
+      }
+
+      <button class="auth-button" type="submit" [disabled]="loading">
+        {{ loading ? 'Connexion...' : 'Se connecter' }}
+      </button>
+    </form>
+
+    <div class="auth-divider" aria-hidden="true">
+      <span></span>
+      <strong>Ou</strong>
+      <span></span>
+    </div>
+
+    <div class="auth-signup">
+      <p>Nouveau sur Reza ?</p>
+      <a class="auth-signup__button" routerLink="/register">S'inscrire</a>
+    </div>
+  </section>
+</main>
