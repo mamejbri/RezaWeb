@@ -37,7 +37,12 @@
     @if (filtersLoading) {
       <span class="filter-chip filter-chip--status">Chargement des filtres...</span>
     } @else {
-      <button class="filter-chip" type="button">
+      <button
+        class="filter-chip"
+        [class.filter-chip--active]="sortByRating"
+        type="button"
+        (click)="toggleRatingSort()"
+      >
         <span class="filter-chip__icon filter-chip__icon--sort" aria-hidden="true"></span>
         Trier par note
       </button>

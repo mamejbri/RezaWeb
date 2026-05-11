@@ -40,6 +40,7 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   filtersLoading = true;
   error = false;
   filterSearchText = '';
+  sortByRating = false;
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -99,6 +100,11 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     this.selectedFilters = {};
     this.search();
+  }
+
+  toggleRatingSort(): void {
+    this.sortByRating = !this.sortByRating;
+    this.applyRatingSort();
   }
 
   get hasSelectedFilters(): boolean {
@@ -218,6 +224,7 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
               rating: `${summary.average.toString().replace('.', ',')} (${summary.count} AVIS) $$$`
             };
           });
+          this.applyRatingSort();
           this.loading = false;
         });
       },
@@ -244,6 +251,27 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
 
   private getSelectedIds(group: FilterGroup): number[] {
     return (this.selectedFilters[group] ?? []).map((option) => option.id);
+  }
+
+  private applyRatingSort(): void {
+    if (!this.sortByRating) {
+      return;
+    }
+
+    this.etablissements = [...this.etablissements].sort((first, second) => {
+      const ratingDelta = this.getRatingValue(second.rating) - this.getRatingValue(first.rating);
+
+      if (ratingDelta !== 0) {
+        return ratingDelta;
+      }
+
+      return second.reviewCount - first.reviewCount;
+    });
+  }
+
+  private getRatingValue(value: string): number {
+    const rating = Number(value.split(' ')[0]?.replace(',', '.'));
+    return Number.isFinite(rating) ? rating : 0;
   }
 
   private normalizeFilterText(value: string): string {
