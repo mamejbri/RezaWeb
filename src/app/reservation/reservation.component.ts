@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, inject, ViewChild, ElementRef, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 
 import { AvailabilityService, PrestationAvailabilityResponse, RestaurantAvailabilityResponse } from '../../services/availability.service';
@@ -20,7 +20,6 @@ type ReservationTab = 'rendezvous' | 'menu' | 'avis' | 'apropos';
   styleUrl: './reservation.component.css'
 })
 export class ReservationComponent implements OnInit {
-  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly avisService = inject(AvisService);
@@ -132,24 +131,15 @@ export class ReservationComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    const rawId = this.route.snapshot.paramMap.get('id');
-    const idFromParam = rawId ? Number(rawId) : NaN;
-    
-    let idFromStorage = 0;
+    let id = 0;
     if (isPlatformBrowser(this.platformId)) {
-      idFromStorage = Number(sessionStorage.getItem('selectedEtablissementId')) || 0;
+      id = Number(sessionStorage.getItem('selectedEtablissementId')) || 0;
     }
-    
-    const id = Number.isInteger(idFromParam) && idFromParam > 0 ? idFromParam : Number.isInteger(idFromStorage) && idFromStorage > 0 ? idFromStorage : 0;
 
     if (!id) {
       this.loading = false;
       this.errorMessage = "Impossible de charger l'etablissement.";
       return;
-    }
-
-    if (Number.isInteger(idFromParam) && idFromParam > 0 && isPlatformBrowser(this.platformId)) {
-      sessionStorage.setItem('selectedEtablissementId', String(id));
     }
 
     this.etablissementsService.getById(id).subscribe({

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { ClientSessionService } from '../../services/client-session.service';
@@ -15,6 +15,7 @@ import { ClientSessionService } from '../../services/client-session.service';
 export class AuthComponent {
   private readonly authService = inject(AuthService);
   private readonly clientSessionService = inject(ClientSessionService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   email = '';
@@ -44,12 +45,22 @@ export class AuthComponent {
     }).subscribe({
       next: () => {
         this.loading = false;
-        void this.router.navigateByUrl('/reservations');
+        void this.router.navigateByUrl(this.returnUrl);
       },
       error: () => {
         this.loading = false;
         this.errorMessage = 'Email ou mot de passe incorrect.';
       }
     });
+  }
+
+  private get returnUrl(): string {
+    const value = this.route.snapshot.queryParamMap.get('returnUrl');
+
+    if (!value || !value.startsWith('/') || value.startsWith('//')) {
+      return '/reservations';
+    }
+
+    return value;
   }
 }

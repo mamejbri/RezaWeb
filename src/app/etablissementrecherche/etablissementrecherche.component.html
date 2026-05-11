@@ -78,8 +78,22 @@
         </button>
       </div>
 
+      <form class="filter-search" role="search" (ngSubmit)="$event.preventDefault()">
+        <input
+          class="filter-search__input"
+          type="search"
+          name="filterSearchText"
+          placeholder="Rechercher dans les filtres"
+          aria-label="Rechercher dans les filtres"
+          [(ngModel)]="filterSearchText"
+        />
+        <button class="filter-search__button" type="button" aria-label="Rechercher">
+          <span aria-hidden="true"></span>
+        </button>
+      </form>
+
       <div class="filter-drawer__options">
-        @for (option of activeFilterGroup.options; track option.id) {
+        @for (option of filteredActiveOptions; track option.id) {
           <button
             class="filter-drawer__option"
             [class.filter-drawer__option--active]="isFilterSelected(activeFilterGroup.group, option)"
@@ -88,6 +102,8 @@
           >
             {{ option.libelle }}
           </button>
+        } @empty {
+          <p class="filter-drawer__empty">Aucun filtre trouve</p>
         }
       </div>
     </aside>
@@ -110,7 +126,7 @@
       @for (etablissement of etablissements; track etablissement.id) {
         <a
           class="etablissement-card"
-          [routerLink]="['/reservation', etablissement.id]"
+          routerLink="/reservation"
           (click)="rememberReservation(etablissement.id)"
         >
           <div

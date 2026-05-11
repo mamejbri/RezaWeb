@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subject, catchError, forkJoin, map, of, takeUntil } from 'rxjs';
 
@@ -17,7 +18,7 @@ import { FilterGroup, FilterGroupDto, FilterOption, FilterService } from '../../
 @Component({
   selector: 'app-etablissementrecherche',
   standalone: true,
-  imports: [RouterLink],
+  imports: [FormsModule, RouterLink],
   templateUrl: './etablissementrecherche.component.html',
   styleUrl: './etablissementrecherche.component.css'
 })
@@ -38,6 +39,7 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   loading = true;
   filtersLoading = true;
   error = false;
+  filterSearchText = '';
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -78,10 +80,12 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
 
   openFilterGroup(group: FilterGroupDto): void {
     this.activeFilterGroup = group;
+    this.filterSearchText = '';
   }
 
   closeFilterDrawer(): void {
     this.activeFilterGroup = null;
+    this.filterSearchText = '';
   }
 
   selectedCount(group: FilterGroup): number {
@@ -99,6 +103,17 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
 
   get hasSelectedFilters(): boolean {
     return Object.values(this.selectedFilters).some((options) => (options?.length ?? 0) > 0);
+  }
+
+  get filteredActiveOptions(): FilterOption[] {
+    const options = this.activeFilterGroup?.options ?? [];
+    const searchText = this.normalizeFilterText(this.filterSearchText);
+
+    if (!searchText) {
+      return options;
+    }
+
+    return options.filter((option) => this.normalizeFilterText(option.libelle).includes(searchText));
   }
 
   get selectedTypeLabel(): string {
@@ -229,6 +244,14 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
 
   private getSelectedIds(group: FilterGroup): number[] {
     return (this.selectedFilters[group] ?? []).map((option) => option.id);
+  }
+
+  private normalizeFilterText(value: string): string {
+    return value
+      .trim()
+      .toLocaleLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 
   private mapSearchTypeToBusinessType(type: RezaSearchType): BusinessType {
