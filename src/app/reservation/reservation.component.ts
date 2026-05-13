@@ -7,7 +7,7 @@ import { catchError, of } from 'rxjs';
 import { AvailabilityService, PrestationAvailabilityResponse, RestaurantAvailabilityResponse } from '../../services/availability.service';
 import { AvisListItem, AvisService, ReviewSummary } from '../../services/avis.service';
 import { ClientSessionService } from '../../services/client-session.service';
-import { EtablissementDetail, EtablissementsService, Prestation } from '../../services/etablissements.service';
+import { EtablissementDetail, EtablissementsService, Prestation, PrestationCategorie } from '../../services/etablissements.service';
 import { CreateReservationPayload, ReservationService } from '../../services/reservation.service';
 
 type ReservationTab = 'rendezvous' | 'menu' | 'avis' | 'apropos';
@@ -56,7 +56,12 @@ export class ReservationComponent implements OnInit {
   reviews: AvisListItem[] = [];
   reviewSummary: ReviewSummary | null = null;
 
-  prestations: Prestation[] = [];
+  categories: PrestationCategorie[] = [];
+  prestationsByCat: Record<number, Prestation[]> = {};
+  categoriesLoading = false;
+  loadingCategoryId: number | null = null;
+  expandedCategoryId: number | null = null;
+
   selectedPrestation: Prestation | null = null;
   prestationSlots: string[] = [];
 
@@ -154,9 +159,9 @@ export class ReservationComponent implements OnInit {
 
         this.applyDateBounds();
 
-        // Load prestations for non-restaurants
+        // Load prestation categories for non-restaurants
         if (!this.isRestaurant) {
-          this.loadPrestations();
+          this.loadCategories();
         }
 
         this.loading = false;
@@ -256,6 +261,23 @@ export class ReservationComponent implements OnInit {
     this.selectedTime = slot;
     this.reservationMessage = '';
     this.reservationError = '';
+  }
+
+  toggleCategory(categoryId: number): void {
+    if (this.expandedCategoryId === categoryId) {
+      this.expandedCategoryId = null;
+      return;
+    }
+
+    this.expandedCategoryId = categoryId;
+    this.selectedPrestation = null;
+    this.selectedTime = '';
+    this.prestationSlots = [];
+    this.availabilityMessage = '';
+
+    if (!this.prestationsByCat[categoryId]) {
+      this.loadPrestationsForCategory(categoryId);
+    }
   }
 
   selectPrestation(prestation: Prestation): void {
@@ -397,18 +419,39 @@ export class ReservationComponent implements OnInit {
     return parts.length > 0 ? parts.join(' ') : 'Client Reza';
   }
 
-  private loadPrestations(): void {
+  private loadCategories(): void {
     if (!this.etablissement?.id) {
       return;
     }
 
-    this.etablissementsService.getPrestations(this.etablissement.id).subscribe({
-      next: (prestations) => {
-        this.prestations = prestations.filter(p => p.visible && p.validated && !p.showAsUnavailable && !p.hidden);
+    this.categoriesLoading = true;
+
+    this.etablissementsService.getCategoriesByEtablissement(this.etablissement.id).subscribe({
+      next: (categories) => {
+        this.categories = categories;
+        this.categoriesLoading = false;
       },
       error: () => {
-        // Prestations loading failed, but don't show error - just continue without them
-        this.prestations = [];
+        this.categories = [];
+        this.categoriesLoading = false;
+      }
+    });
+  }
+
+  private loadPrestationsForCategory(categoryId: number): void {
+    this.loadingCategoryId = categoryId;
+
+    this.etablissementsService.getPrestationsByCategorie(categoryId).subscribe({
+      next: (prestations) => {
+        this.prestationsByCat = {
+          ...this.prestationsByCat,
+          [categoryId]: prestations.filter(p => p.visible && p.validated && !p.showAsUnavailable && !p.hidden)
+        };
+        this.loadingCategoryId = null;
+      },
+      error: () => {
+        this.prestationsByCat = { ...this.prestationsByCat, [categoryId]: [] };
+        this.loadingCategoryId = null;
       }
     });
   }

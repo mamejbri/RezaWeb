@@ -36,6 +36,12 @@ export type BookingRules = {
   cancelBeforeUnit?: BookingPolicyUnit | null;
 };
 
+export type PrestationCategorie = {
+  id: number;
+  nom: string;
+  description?: string | null;
+};
+
 export type Prestation = {
   id: number;
   nom: string;
@@ -131,50 +137,22 @@ export class EtablissementsService {
     return this.http.get<EtablissementDetail>(`${API_BASE_URL}/etablissements/find/by/id/${id}`);
   }
 
-  getPrestations(etablissementId: number): Observable<Prestation[]> {
-    // TODO: Implement backend endpoint to fetch prestations for an establishment
-    // Expected endpoint: GET /etablissements/{id}/prestations
-    // For now, return mock data for testing or empty array
-    return of(this.getMockPrestations());
+  getCategoriesByEtablissement(etablissementId: number): Observable<PrestationCategorie[]> {
+    return this.http
+      .get<{ content: PrestationCategorie[] }>(
+        `${API_BASE_URL}/prestation-categories/etablissement/${etablissementId}`,
+        { params: { page: 0, size: 50, sort: 'id,asc' } }
+      )
+      .pipe(
+        map((page) => page.content),
+        catchError(() => of([]))
+      );
   }
 
-  private getMockPrestations(): Prestation[] {
-    return [
-      {
-        id: 1,
-        nom: 'Massage Relaxant',
-        description: 'Massage complet du corps pour détente',
-        prixFixe: 80,
-        durationMinutes: 60,
-        visible: true,
-        validated: true,
-        showAsUnavailable: false,
-        hidden: false
-      },
-      {
-        id: 2,
-        nom: 'Soin du Visage',
-        description: 'Soin complet du visage avec produits premium',
-        prixFixe: 60,
-        durationMinutes: 45,
-        visible: true,
-        validated: true,
-        showAsUnavailable: false,
-        hidden: false
-      },
-      {
-        id: 3,
-        nom: 'Manucure',
-        description: 'Manucure complète',
-        prixMin: 25,
-        prixMax: 40,
-        durationMinutes: 30,
-        visible: true,
-        validated: true,
-        showAsUnavailable: false,
-        hidden: false
-      }
-    ];
+  getPrestationsByCategorie(categorieId: number): Observable<Prestation[]> {
+    return this.http
+      .get<Prestation[]>(`${API_BASE_URL}/prestations/categorie/${categorieId}`)
+      .pipe(catchError(() => of([])));
   }
 
   getDisplayImage(item: Pick<EtablissementDetail, 'imageUrl' | 'photoPaths' | 'photos'>): string {

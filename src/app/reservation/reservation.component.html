@@ -113,34 +113,68 @@
             @if (!isRestaurant) {
               <div class="booking-prestations">
                 <div class="booking-label">Choisissez une prestation</div>
-                @if (prestations.length === 0) {
+
+                @if (categoriesLoading) {
+                  <p class="booking-message">Chargement des catégories...</p>
+                } @else if (categories.length === 0) {
                   <p class="booking-message">Aucune prestation disponible.</p>
                 } @else {
-                  <div class="booking-prestations__list">
-                    @for (prestation of prestations; track prestation.id) {
-                      <button
-                        class="booking-prestations__item"
-                        [class.booking-prestations__item--active]="selectedPrestation?.id === prestation.id"
-                        type="button"
-                        (click)="selectPrestation(prestation)"
-                      >
-                        <div class="booking-prestations__name">{{ prestation.nom }}</div>
-                        @if (prestation.description) {
-                          <div class="booking-prestations__description">{{ prestation.description }}</div>
-                        }
-                        <div class="booking-prestations__price">
-                          @if (prestation.prixFixe) {
-                            {{ prestation.prixFixe }} EUR
-                          } @else if (prestation.prixMin && prestation.prixMax) {
-                            {{ prestation.prixMin }}-{{ prestation.prixMax }} EUR
-                          } @else {
-                            Prix sur demande
+                  <div class="booking-categories">
+                    @for (cat of categories; track cat.id) {
+                      <div class="booking-category">
+                        <button
+                          class="booking-category__header"
+                          [class.booking-category__header--active]="expandedCategoryId === cat.id"
+                          type="button"
+                          (click)="toggleCategory(cat.id)"
+                        >
+                          <span class="booking-category__name">{{ cat.nom }}</span>
+                          @if (cat.description) {
+                            <span class="booking-category__desc">{{ cat.description }}</span>
                           }
-                        </div>
-                        @if (prestation.durationMinutes) {
-                          <div class="booking-prestations__duration">{{ prestation.durationMinutes }} min</div>
+                          <span class="booking-category__chevron">
+                            {{ expandedCategoryId === cat.id ? '▲' : '▼' }}
+                          </span>
+                        </button>
+
+                        @if (expandedCategoryId === cat.id) {
+                          <div class="booking-category__body">
+                            @if (loadingCategoryId === cat.id) {
+                              <p class="booking-message">Chargement des prestations...</p>
+                            } @else if ((prestationsByCat[cat.id] ?? []).length === 0) {
+                              <p class="booking-message">Aucune prestation dans cette catégorie.</p>
+                            } @else {
+                              <div class="booking-prestations__list">
+                                @for (prestation of prestationsByCat[cat.id]; track prestation.id) {
+                                  <button
+                                    class="booking-prestations__item"
+                                    [class.booking-prestations__item--active]="selectedPrestation?.id === prestation.id"
+                                    type="button"
+                                    (click)="selectPrestation(prestation)"
+                                  >
+                                    <div class="booking-prestations__name">{{ prestation.nom }}</div>
+                                    @if (prestation.description) {
+                                      <div class="booking-prestations__description">{{ prestation.description }}</div>
+                                    }
+                                    <div class="booking-prestations__price">
+                                      @if (prestation.prixFixe) {
+                                        {{ prestation.prixFixe }} MAD
+                                      } @else if (prestation.prixMin && prestation.prixMax) {
+                                        {{ prestation.prixMin }}-{{ prestation.prixMax }} MAD
+                                      } @else {
+                                        Prix sur demande
+                                      }
+                                    </div>
+                                    @if (prestation.durationMinutes) {
+                                      <div class="booking-prestations__duration">{{ prestation.durationMinutes }} min</div>
+                                    }
+                                  </button>
+                                }
+                              </div>
+                            }
+                          </div>
                         }
-                      </button>
+                      </div>
                     }
                   </div>
                 }

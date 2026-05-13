@@ -513,6 +513,65 @@ button {
   min-width: 100px;
 }
 
+.booking-categories {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.booking-category {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #e8e4e4;
+}
+
+.booking-category__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  background: var(--reza-surface);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.booking-category__header:hover {
+  background: #ede9e9;
+}
+
+.booking-category__header--active {
+  background: var(--reza-red);
+  color: #ffffff;
+}
+
+.booking-category__header--active .booking-category__desc {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.booking-category__name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.98rem;
+}
+
+.booking-category__desc {
+  font-size: 0.85rem;
+  color: var(--reza-muted);
+}
+
+.booking-category__chevron {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.booking-category__body {
+  padding: 14px 12px;
+  background: #ffffff;
+}
+
 .reservation-section {
   margin-top: 28px;
   padding: 24px 20px;
