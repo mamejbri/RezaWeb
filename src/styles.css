@@ -7,3 +7,74 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f3ebe2;
 }
+
+.topbar__nav a,
+.search-nav a,
+.auth-nav a,
+.register-nav a,
+.reset-nav a,
+.profile-nav a,
+.reservations-nav a,
+.reservation-nav a {
+  position: relative;
+  padding-bottom: 7px;
+  transition: color 180ms ease;
+}
+
+.topbar__nav a::after,
+.search-nav a::after,
+.auth-nav a::after,
+.register-nav a::after,
+.reset-nav a::after,
+.profile-nav a::after,
+.reservations-nav a::after,
+.reservation-nav a::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: #cf3232;
+  transition: left 180ms ease, right 180ms ease;
+}
+
+.topbar__nav a:hover,
+.search-nav a:hover,
+.auth-nav a:hover,
+.register-nav a:hover,
+.reset-nav a:hover,
+.profile-nav a:hover,
+.reservations-nav a:hover,
+.reservation-nav a:hover,
+.topbar__nav a.nav-link--active,
+.search-nav a.nav-link--active,
+.auth-nav a.nav-link--active,
+.register-nav a.nav-link--active,
+.reset-nav a.nav-link--active,
+.profile-nav a.nav-link--active,
+.reservations-nav a.nav-link--active,
+.reservation-nav a.nav-link--active {
+  color: #cf3232;
+}
+
+.topbar__nav a:hover::after,
+.search-nav a:hover::after,
+.auth-nav a:hover::after,
+.register-nav a:hover::after,
+.reset-nav a:hover::after,
+.profile-nav a:hover::after,
+.reservations-nav a:hover::after,
+.reservation-nav a:hover::after,
+.topbar__nav a.nav-link--active::after,
+.search-nav a.nav-link--active::after,
+.auth-nav a.nav-link--active::after,
+.register-nav a.nav-link--active::after,
+.reset-nav a.nav-link--active::after,
+.profile-nav a.nav-link--active::after,
+.reservations-nav a.nav-link--active::after,
+.reservation-nav a.nav-link--active::after {
+  left: 0;
+  right: 0;
+}

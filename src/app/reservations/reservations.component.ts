@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Observable, catchError, forkJoin, of } from 'rxjs';
 
 import { AuthService } from '../../services/auth.service';
@@ -40,7 +40,7 @@ type ReservationReviewMap = Record<number, AvisResponse | null>;
 @Component({
   selector: 'app-reservations',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './reservations.component.html',
   styleUrl: './reservations.component.css'
 })

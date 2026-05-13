@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { ClientSessionService } from '../../services/client-session.service';
@@ -8,7 +8,7 @@ import { ClientSessionService } from '../../services/client-session.service';
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './auth.component.html',
   styleUrl: './auth.component.css'
 })

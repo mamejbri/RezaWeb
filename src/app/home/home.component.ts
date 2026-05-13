@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { ClientSessionService } from '../../services/client-session.service';
 
@@ -18,7 +18,7 @@ type ProCard = {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })

@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 import { Subject, catchError, forkJoin, map, of, takeUntil } from 'rxjs';
 
 import { AvisService } from '../../services/avis.service';
@@ -18,7 +18,7 @@ import { FilterGroup, FilterGroupDto, FilterOption, FilterService } from '../../
 @Component({
   selector: 'app-etablissementrecherche',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './etablissementrecherche.component.html',
   styleUrl: './etablissementrecherche.component.css'
 })

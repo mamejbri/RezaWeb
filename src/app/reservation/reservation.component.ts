@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, inject, ViewChild, ElementRef, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { catchError, of } from 'rxjs';
 
 import { AvailabilityService, PrestationAvailabilityResponse, RestaurantAvailabilityResponse } from '../../services/availability.service';
@@ -15,7 +15,7 @@ type ReservationTab = 'rendezvous' | 'menu' | 'avis' | 'apropos';
 @Component({
   selector: 'app-reservation',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, RouterLinkActive],
   templateUrl: './reservation.component.html',
   styleUrl: './reservation.component.css'
 })
