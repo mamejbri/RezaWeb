@@ -269,14 +269,26 @@ export class ReservationComponent implements OnInit {
   openDatePicker(input: HTMLInputElement): void {
     const pickerInput = input as HTMLInputElement & { showPicker?: () => void };
 
+    // Ensure input is visible before attempting to open picker
+    const originalOpacity = pickerInput.style.opacity;
+    pickerInput.style.opacity = '1';
+
     if (typeof pickerInput.showPicker === 'function') {
       try {
         pickerInput.showPicker();
+        // Restore opacity after picker is shown
+        setTimeout(() => {
+          pickerInput.style.opacity = originalOpacity;
+        }, 0);
       } catch {
         pickerInput.focus();
+        // Restore opacity on error
+        pickerInput.style.opacity = originalOpacity;
       }
     } else {
       pickerInput.focus();
+      // Restore opacity for fallback focus
+      pickerInput.style.opacity = originalOpacity;
     }
   }
 
