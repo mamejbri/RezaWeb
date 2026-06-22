@@ -38,7 +38,7 @@ input {
   align-items: center;
   gap: 24px;
   width: min(1600px, 100%);
-  margin: 16px auto 0;
+  margin: 0 auto;
   padding: 18px 28px;
   border-radius: 24px;
   background: linear-gradient(180deg, #f9f8f8 0%, #f8f6f6 100%);

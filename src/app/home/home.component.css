@@ -39,7 +39,6 @@ a {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 24px;
-  margin-top: 16px;
   padding: 18px 28px;
   border-radius: 24px;
   background: var(--reza-surface);
