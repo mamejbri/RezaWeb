@@ -29,35 +29,45 @@
   <section class="register-panel">
     <h1>Vous avez deja un compte Reza</h1>
 
-    <form class="register-form">
+    <form class="register-form" (ngSubmit)="register()">
       <div class="register-grid">
         <label class="register-field">
-          <input type="text" placeholder="Nom" />
+          <input type="text" name="nom" [(ngModel)]="nom" placeholder="Nom" required />
         </label>
 
         <label class="register-field">
-          <input type="text" placeholder="Prenom" />
+          <input type="text" name="prenom" [(ngModel)]="prenom" placeholder="Prenom" required />
         </label>
       </div>
 
       <label class="register-field">
-        <input type="tel" placeholder="Numero de telephone" />
+        <input type="tel" name="phoneNumber" [(ngModel)]="phoneNumber" placeholder="Numero de telephone" required />
       </label>
 
       <label class="register-field">
-        <input type="email" placeholder="E-mail" />
+        <input type="email" name="email" [(ngModel)]="email" placeholder="E-mail" required />
       </label>
 
       <label class="register-field">
-        <input type="password" placeholder="Mot de passe" />
+        <input type="password" name="password" [(ngModel)]="password" placeholder="Mot de passe" required />
       </label>
 
       <label class="register-check">
-        <input type="checkbox" />
+        <input type="checkbox" name="cguChecked" [(ngModel)]="cguChecked" required />
         <span>J'accepte les CGU de Reza</span>
       </label>
 
-      <button class="register-button" type="button">S'inscrire</button>
+      @if (errorMessage) {
+        <p class="register-error">{{ errorMessage }}</p>
+      }
+
+      @if (successMessage) {
+        <p class="register-success">{{ successMessage }}</p>
+      }
+
+      <button class="register-button" type="submit" [disabled]="loading">
+        {{ loading ? 'Inscription...' : "S'inscrire" }}
+      </button>
     </form>
 
     <div class="register-divider" aria-hidden="true">

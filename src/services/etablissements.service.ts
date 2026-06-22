@@ -10,8 +10,9 @@ export type BusinessType = 'RESTAURANT' | 'SPA' | 'ACTIVITY';
 export type EtablissementCard = {
   id: number;
   name: string;
+  slug: string;
   address: string;
-  rating: string;
+  rating: number;
   reviewCount: number;
   imageUrl: string | null;
 };
@@ -63,6 +64,7 @@ export type Prestation = {
 export type EtablissementDetail = {
   id: number;
   nom: string;
+  slug?: string | null;
   address?: string | null;
   description?: string | null;
   imageUrl?: string | null;
@@ -137,6 +139,10 @@ export class EtablissementsService {
     return this.http.get<EtablissementDetail>(`${API_BASE_URL}/etablissements/find/by/id/${id}`);
   }
 
+  getBySlug(slug: string): Observable<EtablissementDetail> {
+    return this.http.get<EtablissementDetail>(`${API_BASE_URL}/etablissements/find/by/slug/${slug}`);
+  }
+
   getCategoriesByEtablissement(etablissementId: number): Observable<PrestationCategorie[]> {
     return this.http
       .get<{ content: PrestationCategorie[] }>(
@@ -194,12 +200,6 @@ export class EtablissementsService {
     return [...new Set(values)];
   }
 
-  getRatingLabel(item: Pick<EtablissementDetail, 'averageRating' | 'reviewCount'>): string {
-    const averageRating = item.averageRating ?? 0;
-    const reviewCount = item.reviewCount ?? 0;
-    return `${averageRating.toString().replace('.', ',')} (${reviewCount} AVIS) $$$`;
-  }
-
   private buildSearchRequest(type: RezaSearchType, filters: EtablissementSearchFilters): EtablissementSearchRequest {
     return {
       text: null,
@@ -232,8 +232,9 @@ export class EtablissementsService {
     return {
       id: item.id,
       name: item.nom,
+      slug: item.slug ?? '',
       address: item.address?.trim() || 'Adresse non renseignee',
-      rating: this.getRatingLabel(item),
+      rating: item.averageRating ?? 0,
       reviewCount: item.reviewCount ?? 0,
       imageUrl: this.resolveImageUrl(item) ?? 'assets/images/default_image.jpg'
     };

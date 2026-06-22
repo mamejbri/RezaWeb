@@ -178,6 +178,23 @@
   cursor: pointer;
 }
 
+.register-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.register-error {
+  margin: 0 0 0 14px;
+  color: #cf3232;
+  font-size: 0.92rem;
+}
+
+.register-success {
+  margin: 0 0 0 14px;
+  color: #2e7d32;
+  font-size: 0.92rem;
+}
+
 .register-divider {
   display: flex;
   align-items: center;

@@ -32,6 +32,14 @@ type ResetPasswordRequest = {
   newPassword: string;
 };
 
+export type RegistrationClientRequest = {
+  email: string;
+  password: string;
+  phoneNumber: string;
+  name: string;
+  lastName: string;
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -39,6 +47,10 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly authTokenService = inject(AuthTokenService);
+
+  registerClient(payload: RegistrationClientRequest): Observable<void> {
+    return this.http.post<void>(`${API_BASE_URL}/auth/register_client`, payload);
+  }
 
   loginClient(payload: LoginRequest): Observable<LoginClientResponse> {
     return this.http

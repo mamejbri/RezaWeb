@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, inject, ViewChild, ElementRef, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { catchError, of } from 'rxjs';
 
 import { AvailabilityService, PrestationAvailabilityResponse, RestaurantAvailabilityResponse } from '../../services/availability.service';
@@ -27,6 +27,7 @@ export class ReservationComponent implements OnInit {
   private readonly etablissementsService = inject(EtablissementsService);
   private readonly availabilityService = inject(AvailabilityService);
   private readonly reservationService = inject(ReservationService);
+  private readonly route = inject(ActivatedRoute);
 
   @ViewChild('thumbsContainer', { static: false }) thumbsContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('menuThumbsContainer', { static: false }) menuThumbsContainer!: ElementRef<HTMLDivElement>;
@@ -86,14 +87,10 @@ export class ReservationComponent implements OnInit {
   }
 
   get displayRating(): string {
-    if (this.reviewSummary) {
-      return this.etablissementsService.getRatingLabel({
-        averageRating: this.reviewSummary.average,
-        reviewCount: this.reviewSummary.count
-      });
-    }
+    const average = this.reviewSummary?.average ?? this.etablissement?.averageRating ?? 0;
+    const count = this.reviewSummary?.count ?? this.etablissement?.reviewCount ?? 0;
 
-    return this.etablissement ? this.etablissementsService.getRatingLabel(this.etablissement) : 'Aucun avis';
+    return `${average.toFixed(1).replace('.', ',')} (${count} AVIS)`;
   }
 
   get hasMenu(): boolean {
@@ -136,43 +133,71 @@ export class ReservationComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    let id = 0;
     if (isPlatformBrowser(this.platformId)) {
-      id = Number(sessionStorage.getItem('selectedEtablissementId')) || 0;
-    }
-
-    if (!id) {
+      const slug = this.route.snapshot.paramMap.get('slug');
+      if (slug) {
+        this.loadEtablissementBySlug(slug);
+      } else {
+        const id = Number(sessionStorage.getItem('selectedEtablissementId')) || 0;
+        if (id) {
+          this.loadEtablissementById(id);
+        } else {
+          this.loading = false;
+          this.errorMessage = "Impossible de charger l'etablissement.";
+        }
+      }
+    } else {
       this.loading = false;
-      this.errorMessage = "Impossible de charger l'etablissement.";
-      return;
     }
+  }
 
-    this.etablissementsService.getById(id).subscribe({
+  private loadEtablissementBySlug(slug: string): void {
+    this.etablissementsService.getBySlug(slug).subscribe({
       next: (etablissement) => {
-        this.etablissement = etablissement;
-        this.gallery = this.etablissementsService.getGalleryImages(etablissement);
-        this.menuImages = this.etablissementsService.getMenuImages(etablissement);
-
-        if (this.gallery.length === 0) {
-          this.gallery = [this.etablissementsService.getDisplayImage(etablissement)];
-        }
-
-        this.applyDateBounds();
-
-        // Load prestation categories for non-restaurants
-        if (!this.isRestaurant) {
-          this.loadCategories();
-        }
-
-        this.loading = false;
-        this.loadReviews();
-        this.loadAvailability();
+        this.setupEtablissement(etablissement);
       },
       error: () => {
         this.loading = false;
         this.errorMessage = "Impossible de charger l'etablissement.";
       }
     });
+  }
+
+  private loadEtablissementById(id: number): void {
+    this.etablissementsService.getById(id).subscribe({
+      next: (etablissement) => {
+        this.setupEtablissement(etablissement);
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMessage = "Impossible de charger l'etablissement.";
+      }
+    });
+  }
+
+  private setupEtablissement(etablissement: EtablissementDetail): void {
+    this.etablissement = etablissement;
+    if (isPlatformBrowser(this.platformId)) {
+      sessionStorage.setItem('selectedEtablissementId', String(etablissement.id));
+    }
+
+    this.gallery = this.etablissementsService.getGalleryImages(etablissement);
+    this.menuImages = this.etablissementsService.getMenuImages(etablissement);
+
+    if (this.gallery.length === 0) {
+      this.gallery = [this.etablissementsService.getDisplayImage(etablissement)];
+    }
+
+    this.applyDateBounds();
+
+    // Load prestation categories for non-restaurants
+    if (!this.isRestaurant) {
+      this.loadCategories();
+    }
+
+    this.loading = false;
+    this.loadReviews();
+    this.loadAvailability();
   }
 
   setTab(tab: ReservationTab): void {
@@ -245,7 +270,7 @@ export class ReservationComponent implements OnInit {
     this.availabilityMessage = '';
     this.reservationMessage = '';
     this.reservationError = '';
-    
+
     if (this.isRestaurant) {
       this.loadRestaurantAvailability();
     } else if (this.selectedPrestation) {

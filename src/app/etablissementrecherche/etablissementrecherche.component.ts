@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 import { Subject, catchError, forkJoin, map, of, takeUntil } from 'rxjs';
@@ -18,7 +18,7 @@ import { FilterGroup, FilterGroupDto, FilterOption, FilterService } from '../../
 @Component({
   selector: 'app-etablissementrecherche',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive],
+  imports: [FormsModule, RouterLink, RouterLinkActive, DecimalPipe],
   templateUrl: './etablissementrecherche.component.html',
   styleUrl: './etablissementrecherche.component.css'
 })
@@ -125,11 +125,11 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   get selectedTypeLabel(): string {
     switch (this.selectedType) {
       case 'soin':
-        return 'Soin';
+        return 'Beauté / Bien être';
       case 'activite':
-        return 'Activité';
+        return 'Activitée';
       default:
-        return 'Restaurants';
+        return 'Restaurant';
     }
   }
 
@@ -221,7 +221,7 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
             return {
               ...etablissement,
               reviewCount: summary.count,
-              rating: `${summary.average.toString().replace('.', ',')} (${summary.count} AVIS) $$$`
+              rating: summary.average
             };
           });
           this.applyRatingSort();
@@ -269,9 +269,8 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
     });
   }
 
-  private getRatingValue(value: string): number {
-    const rating = Number(value.split(' ')[0]?.replace(',', '.'));
-    return Number.isFinite(rating) ? rating : 0;
+  private getRatingValue(value: number): number {
+    return Number.isFinite(value) ? value : 0;
   }
 
   private normalizeFilterText(value: string): string {

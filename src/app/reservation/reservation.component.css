@@ -37,7 +37,6 @@ button {
   align-items: center;
   gap: 24px;
   width: min(1600px, 100%);
-  margin: 16px auto 0;
   padding: 18px 28px;
   border-radius: 24px;
   background: linear-gradient(180deg, #faf9f9 0%, #f8f6f6 100%);
@@ -379,7 +378,7 @@ button {
   flex-wrap: wrap;
 }
 
-.booking-slots__row + .booking-slots__row {
+.booking-slots__row+.booking-slots__row {
   margin-top: 14px;
 }
 
