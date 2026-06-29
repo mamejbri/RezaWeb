@@ -7,6 +7,7 @@ import { catchError, of } from 'rxjs';
 import { AvailabilityService, PrestationAvailabilityResponse, RestaurantAvailabilityResponse } from '../../services/availability.service';
 import { AvisListItem, AvisService, ReviewSummary } from '../../services/avis.service';
 import { ClientSessionService } from '../../services/client-session.service';
+import { ClientService } from '../../services/client.service';
 import { EtablissementDetail, EtablissementsService, Prestation, PrestationCategorie } from '../../services/etablissements.service';
 import { CreateReservationPayload, ReservationService } from '../../services/reservation.service';
 
@@ -24,6 +25,7 @@ export class ReservationComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly avisService = inject(AvisService);
   private readonly clientSessionService = inject(ClientSessionService);
+  private readonly clientService = inject(ClientService);
   private readonly etablissementsService = inject(EtablissementsService);
   private readonly availabilityService = inject(AvailabilityService);
   private readonly reservationService = inject(ReservationService);
@@ -42,6 +44,11 @@ export class ReservationComponent implements OnInit {
   reservationLoading = false;
   reviewsLoading = false;
   reviewsError = '';
+  showProfilePopup = false;
+  popupFirstName = '';
+  popupLastName = '';
+  popupLoading = false;
+  popupError = '';
 
   gallery: string[] = [];
   menuImages: string[] = [];
@@ -362,10 +369,19 @@ export class ReservationComponent implements OnInit {
     }
 
     this.clientSessionService.ensureLoaded();
-    const clientId = this.clientSessionService.profile()?.id;
+    const profile = this.clientSessionService.profile();
+    const clientId = profile?.id;
 
     if (!clientId) {
       this.reservationError = 'Impossible de confirmer votre identite. Reessayez dans un instant.';
+      return;
+    }
+
+    if (!profile?.firstName || !profile?.lastName) {
+      this.showProfilePopup = true;
+      this.popupFirstName = profile?.firstName || '';
+      this.popupLastName = profile?.lastName || '';
+      this.popupError = '';
       return;
     }
 
@@ -420,6 +436,48 @@ export class ReservationComponent implements OnInit {
         this.reservationError = this.getReservationErrorMessage(error?.error?.message);
       }
     });
+  }
+
+  saveProfileFromPopup(): void {
+    const profile = this.clientSessionService.profile();
+    if (!profile) {
+      this.popupError = 'Session expirée. Veuillez vous reconnecter.';
+      return;
+    }
+
+    const firstName = this.popupFirstName.trim();
+    const lastName = this.popupLastName.trim();
+
+    if (!firstName || !lastName) {
+      this.popupError = 'Le prénom et le nom sont requis.';
+      return;
+    }
+
+    this.popupLoading = true;
+    this.popupError = '';
+
+    this.clientService.updateMe({
+      firstName,
+      lastName,
+      email: profile.email,
+      phone: profile.phone
+    }).subscribe({
+      next: (updatedProfile) => {
+        this.clientSessionService.setProfile(updatedProfile);
+        this.popupLoading = false;
+        this.showProfilePopup = false;
+        this.confirmReservation();
+      },
+      error: (err) => {
+        this.popupLoading = false;
+        this.popupError = err?.error?.message || 'Une erreur est survenue lors de la mise à jour.';
+      }
+    });
+  }
+
+  closeProfilePopup(): void {
+    this.showProfilePopup = false;
+    this.popupError = '';
   }
 
   formatReviewDate(value: string | null | undefined): string {

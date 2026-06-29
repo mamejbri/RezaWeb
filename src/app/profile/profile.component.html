@@ -5,24 +5,23 @@
     </a>
 
     <nav class="profile-nav" aria-label="Navigation principale">
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Restaurants</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Beauté / Bien être</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Activitées</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }" routerLinkActive="nav-link--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Restaurant</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }" routerLinkActive="nav-link--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Beauté
+        / Bien être</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }" routerLinkActive="nav-link--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Activitée</a>
     </nav>
 
     @if (isAuthenticated) {
-      <a
-        class="profile-avatar profile-avatar--small"
-        routerLink="/profile"
-        aria-label="Profil utilisateur"
-        [style.background-image]="avatarStyle"
-        [class.profile-avatar--image]="!!avatarStyle"
-      ></a>
+    <a class="profile-avatar profile-avatar--small" routerLink="/profile" aria-label="Profil utilisateur"
+      [style.background-image]="avatarStyle" [class.profile-avatar--image]="!!avatarStyle"></a>
     } @else {
-      <div class="profile-topbar__actions">
-        <a class="profile-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
-        <a class="profile-topbar__login" routerLink="/auth">Se connecter</a>
-      </div>
+    <div class="profile-topbar__actions">
+      <a class="profile-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
+      <a class="profile-topbar__login" routerLink="/auth">Se connecter</a>
+    </div>
     }
   </header>
 
@@ -38,55 +37,36 @@
       <div class="account-card__divider"></div>
 
       <button class="account-card__button account-card__button--logout" type="button" (click)="logout()">
-        Se deconnecter
+        Se déconnecter
       </button>
     </aside>
 
     <section class="profile-content">
       <article class="profile-hero">
-        <input
-          #photoInput
-          class="profile-photo-input"
-          type="file"
-          accept="image/*"
-          (change)="onPhotoSelected($event)"
-        />
-        <div
-          class="profile-avatar profile-avatar--large"
-          aria-hidden="true"
-          [style.background-image]="avatarStyle"
-          [class.profile-avatar--image]="!!avatarStyle"
-        ></div>
+        <input #photoInput class="profile-photo-input" type="file" accept="image/*"
+          (change)="onPhotoSelected($event)" />
+        <div class="profile-avatar profile-avatar--large" aria-hidden="true" [style.background-image]="avatarStyle"
+          [class.profile-avatar--image]="!!avatarStyle"></div>
         <h2>{{ firstName }} {{ lastName }}</h2>
-        <button
-          class="profile-hero__button"
-          type="button"
-          [disabled]="photoLoading"
-          (click)="selectPhoto(photoInput)"
-        >
+        <button class="profile-hero__button" type="button" [disabled]="photoLoading" (click)="selectPhoto(photoInput)">
           {{ photoLoading ? 'Mise a jour...' : 'Modifier ma photo' }}
         </button>
         @if (photoErrorMessage) {
-          <p class="profile-status profile-status--error">{{ photoErrorMessage }}</p>
+        <p class="profile-status profile-status--error">{{ photoErrorMessage }}</p>
         }
       </article>
 
       <article class="profile-panel">
         @if (loading) {
-          <p class="profile-status">Chargement du profil...</p>
+        <p class="profile-status">Chargement du profil...</p>
         } @else if (errorMessage) {
-          <p class="profile-status profile-status--error">{{ errorMessage }}</p>
+        <p class="profile-status profile-status--error">{{ errorMessage }}</p>
         }
 
         <div class="profile-panel__header">
           <h3>Mes coordonnees</h3>
-          <button
-            class="profile-panel__edit"
-            type="button"
-            aria-label="Modifier les coordonnees"
-            [disabled]="loading || infoSaving"
-            (click)="enableInfoEdit()"
-          >
+          <button class="profile-panel__edit" type="button" aria-label="Modifier les coordonnees"
+            [disabled]="loading || infoSaving" (click)="enableInfoEdit()">
             ✎
           </button>
         </div>
@@ -105,107 +85,76 @@
         <div class="profile-grid">
           <label class="profile-field">
             <span>Nom</span>
-            <input
-              type="text"
-              name="lastName"
-              [(ngModel)]="infoForm.lastName"
-              [readOnly]="!infoEditMode"
-              [class.profile-field__input--locked]="!infoEditMode"
-            />
+            <input type="text" name="lastName" [(ngModel)]="infoForm.lastName" [readOnly]="!infoEditMode"
+              [class.profile-field__input--locked]="!infoEditMode" />
           </label>
 
           <label class="profile-field">
             <span>Prenom</span>
-            <input
-              type="text"
-              name="firstName"
-              [(ngModel)]="infoForm.firstName"
-              [readOnly]="!infoEditMode"
-              [class.profile-field__input--locked]="!infoEditMode"
-            />
+            <input type="text" name="firstName" [(ngModel)]="infoForm.firstName" [readOnly]="!infoEditMode"
+              [class.profile-field__input--locked]="!infoEditMode" />
           </label>
         </div>
 
         <label class="profile-field">
           <span>E-mail</span>
-          <input
-            type="email"
-            name="email"
-            [(ngModel)]="infoForm.email"
-            [readOnly]="!infoEditMode"
-            [class.profile-field__input--locked]="!infoEditMode"
-          />
+          <input type="email" name="email" [(ngModel)]="infoForm.email" [readOnly]="!infoEditMode"
+            [class.profile-field__input--locked]="!infoEditMode" />
         </label>
 
         <label class="profile-field">
           <span>Numero de telephone</span>
-          <input
-            type="tel"
-            name="phone"
-            [(ngModel)]="infoForm.phone"
-            [readOnly]="!infoEditMode"
-            [class.profile-field__input--locked]="!infoEditMode"
-          />
+          <input type="tel" name="phone" [(ngModel)]="infoForm.phone" [readOnly]="!infoEditMode"
+            [class.profile-field__input--locked]="!infoEditMode" />
         </label>
 
         @if (infoMessage) {
-          <p class="profile-status profile-status--success">{{ infoMessage }}</p>
+        <p class="profile-status profile-status--success">{{ infoMessage }}</p>
         } @else if (infoErrorMessage) {
-          <p class="profile-status profile-status--error">{{ infoErrorMessage }}</p>
+        <p class="profile-status profile-status--error">{{ infoErrorMessage }}</p>
         }
 
         @if (infoEditMode) {
-          <div class="profile-panel__actions">
-            <button class="profile-action-button" type="button" [disabled]="infoSaving" (click)="saveInfo()">
-              {{ infoSaving ? 'Enregistrement...' : 'Enregistrer mes informations' }}
-            </button>
-            <button class="profile-secondary-button" type="button" [disabled]="infoSaving" (click)="cancelInfoEdit()">
-              Annuler
-            </button>
-          </div>
+        <div class="profile-panel__actions">
+          <button class="profile-action-button" type="button" [disabled]="infoSaving" (click)="saveInfo()">
+            {{ infoSaving ? 'Enregistrement...' : 'Enregistrer mes informations' }}
+          </button>
+          <button class="profile-secondary-button" type="button" [disabled]="infoSaving" (click)="cancelInfoEdit()">
+            Annuler
+          </button>
+        </div>
         }
       </article>
 
       <article class="profile-panel profile-panel--password">
         <h3>Mot de passe</h3>
         <p>
-          Pour modifier votre mot de passe, saisissez d'abord votre mot de passe actuel, puis votre nouveau mot de passe.
+          Pour modifier votre mot de passe, saisissez d'abord votre mot de passe actuel, puis votre nouveau mot de
+          passe.
         </p>
 
         <label class="profile-field">
           <span>Mot de passe actuel</span>
-          <input
-            type="password"
-            name="currentPassword"
-            [(ngModel)]="passwordForm.currentPassword"
-            placeholder="Mot de passe actuel"
-          />
+          <input type="password" name="currentPassword" [(ngModel)]="passwordForm.currentPassword"
+            placeholder="Mot de passe actuel" />
         </label>
 
         <label class="profile-field">
           <span>Nouveau mot de passe</span>
-          <input
-            type="password"
-            name="newPassword"
-            [(ngModel)]="passwordForm.newPassword"
-            placeholder="Nouveau mot de passe"
-          />
+          <input type="password" name="newPassword" [(ngModel)]="passwordForm.newPassword"
+            placeholder="Nouveau mot de passe" />
         </label>
 
         <label class="profile-field">
           <span>Confirmer le nouveau mot de passe</span>
-          <input
-            type="password"
-            name="confirmPassword"
-            [(ngModel)]="passwordForm.confirmPassword"
-            placeholder="Confirmer le nouveau mot de passe"
-          />
+          <input type="password" name="confirmPassword" [(ngModel)]="passwordForm.confirmPassword"
+            placeholder="Confirmer le nouveau mot de passe" />
         </label>
 
         @if (passwordMessage) {
-          <p class="profile-status profile-status--success">{{ passwordMessage }}</p>
+        <p class="profile-status profile-status--success">{{ passwordMessage }}</p>
         } @else if (passwordErrorMessage) {
-          <p class="profile-status profile-status--error">{{ passwordErrorMessage }}</p>
+        <p class="profile-status profile-status--error">{{ passwordErrorMessage }}</p>
         }
 
         <div class="profile-password__actions">

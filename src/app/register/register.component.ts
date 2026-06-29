@@ -22,6 +22,9 @@ export class RegisterComponent {
   phoneNumber = '';
   email = '';
   password = '';
+  confirmPassword = '';
+  showPassword = false;
+  showConfirmPassword = false;
   cguChecked = false;
 
   loading = false;
@@ -42,8 +45,25 @@ export class RegisterComponent {
     this.errorMessage = '';
     this.successMessage = '';
 
-    if (!this.nom.trim() || !this.prenom.trim() || !this.phoneNumber.trim() || !this.email.trim() || !this.password.trim()) {
+    if (!this.nom.trim() || !this.prenom.trim() || !this.phoneNumber.trim() || !this.email.trim() || !this.password.trim() || !this.confirmPassword.trim()) {
       this.errorMessage = 'Tous les champs sont obligatoires.';
+      return;
+    }
+
+    if (this.password !== this.confirmPassword) {
+      this.errorMessage = 'Les mots de passe ne correspondent pas.';
+      return;
+    }
+
+    const phone = this.phoneNumber.trim();
+    if (!phone.startsWith('+')) {
+      this.errorMessage = 'Le numéro WhatsApp doit commencer par "+". (Ex: +212...)';
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.email.trim())) {
+      this.errorMessage = 'Veuillez saisir une adresse e-mail valide.';
       return;
     }
 

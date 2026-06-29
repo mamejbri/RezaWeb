@@ -5,29 +5,28 @@
     </a>
 
     <nav class="register-nav" aria-label="Navigation principale">
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Restaurants</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Beauté / Bien être</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }" routerLinkActive="nav-link--active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Activitées</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }" routerLinkActive="nav-link--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Restaurant</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }" routerLinkActive="nav-link--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Beauté
+        / Bien être</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }" routerLinkActive="nav-link--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Activitée</a>
     </nav>
 
     @if (isAuthenticated) {
-      <a
-        class="register-avatar"
-        routerLink="/profile"
-        aria-label="Mon compte"
-        [style.background-image]="avatarStyle"
-        [class.register-avatar--image]="!!avatarStyle"
-      ></a>
+    <a class="register-avatar" routerLink="/profile" aria-label="Mon compte" [style.background-image]="avatarStyle"
+      [class.register-avatar--image]="!!avatarStyle"></a>
     } @else {
-      <div class="register-topbar__actions">
-        <a class="register-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
-        <a class="register-topbar__login" routerLink="/auth">Se connecter</a>
-      </div>
+    <div class="register-topbar__actions">
+      <a class="register-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
+      <a class="register-topbar__login" routerLink="/auth">Se connecter</a>
+    </div>
     }
   </header>
 
   <section class="register-panel">
-    <h1>Vous avez deja un compte Reza</h1>
+    <h1 style="text-align: center;">Nouveau sur Reza ? Inscrivez-vous</h1>
 
     <form class="register-form" (ngSubmit)="register()">
       <div class="register-grid">
@@ -41,32 +40,78 @@
       </div>
 
       <label class="register-field">
-        <input type="tel" name="phoneNumber" [(ngModel)]="phoneNumber" placeholder="Numero de telephone" required />
+        <input type="tel" name="phoneNumber" [(ngModel)]="phoneNumber" placeholder="Numéro Whatsapp" required />
       </label>
 
       <label class="register-field">
         <input type="email" name="email" [(ngModel)]="email" placeholder="E-mail" required />
       </label>
 
-      <label class="register-field">
-        <input type="password" name="password" [(ngModel)]="password" placeholder="Mot de passe" required />
-      </label>
+      <div class="register-field register-field--password">
+        <input [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="password"
+          placeholder="Mot de passe" required />
+        <button type="button" class="register-field__toggle" (click)="showPassword = !showPassword"
+          [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+          @if (showPassword) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="register-field__toggle-icon">
+            <path
+              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+            </path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+          } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="register-field__toggle-icon">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          }
+        </button>
+      </div>
+
+      <div class="register-field register-field--password">
+        <input [type]="showConfirmPassword ? 'text' : 'password'" name="confirmPassword" [(ngModel)]="confirmPassword"
+          placeholder="Confirmation du mot de passe" required />
+        <button type="button" class="register-field__toggle" (click)="showConfirmPassword = !showConfirmPassword"
+          [attr.aria-label]="showConfirmPassword ? 'Masquer la confirmation du mot de passe' : 'Afficher la confirmation du mot de passe'">
+          @if (showConfirmPassword) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="register-field__toggle-icon">
+            <path
+              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+            </path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+          } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="register-field__toggle-icon">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          }
+        </button>
+      </div>
 
       <label class="register-check">
         <input type="checkbox" name="cguChecked" [(ngModel)]="cguChecked" required />
-        <span>J'accepte les CGU de Reza</span>
+        <a class="" href="https://booktareza.com/cgu/">J'accepte les CGU de REZA</a>
       </label>
 
       @if (errorMessage) {
-        <p class="register-error">{{ errorMessage }}</p>
+      <p class="register-error">{{ errorMessage }}</p>
       }
 
       @if (successMessage) {
-        <p class="register-success">{{ successMessage }}</p>
+      <p class="register-success">{{ successMessage }}</p>
       }
 
       <button class="register-button" type="submit" [disabled]="loading">
-        {{ loading ? 'Inscription...' : "S'inscrire" }}
+        {{ loading ? 'Inscription...' : "Créer un compte" }}
       </button>
     </form>
 
@@ -76,6 +121,7 @@
       <span></span>
     </div>
 
-    <p class="register-footnote">Nouveau sur Reza ?</p>
+    <p class="register-footnote">Vous avez déjà un compte Reza ? <a class="register-footnote__link"
+        routerLink="/auth">Se connecter</a></p>
   </section>
 </main>

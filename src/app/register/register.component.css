@@ -52,6 +52,8 @@
   justify-content: center;
   gap: 58px;
   flex-wrap: wrap;
+  margin-bottom: 20px;
+
 }
 
 .register-nav a {
@@ -252,5 +254,47 @@
 
   .register-divider span {
     width: 96px;
+  }
+}
+
+/* Password field with show/hide toggle styling */
+.register-field--password {
+  position: relative;
+}
+
+.register-field--password input {
+  padding-right: 64px;
+}
+
+.register-field__toggle {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--reza-ink);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.register-field__toggle:hover {
+  opacity: 1;
+}
+
+.register-field__toggle-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--reza-ink);
+}
+
+@media (max-width: 640px) {
+  .register-field__toggle {
+    right: 18px;
   }
 }

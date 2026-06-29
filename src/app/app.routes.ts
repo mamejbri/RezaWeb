@@ -61,6 +61,11 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'reservation/:slug',
+    loadComponent: () =>
+      import('./reservation/reservation.component').then((m) => m.ReservationComponent)
+  },
+  {
     path: 'reservation',
     loadComponent: () =>
       import('./reservation/reservation.component').then((m) => m.ReservationComponent)

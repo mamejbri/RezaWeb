@@ -851,3 +851,129 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* Profile Popup Modal */
+.profile-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.profile-popup__container {
+  background: #ffffff;
+  border-radius: 24px;
+  width: min(480px, 100%);
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: popupScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popupScale {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.profile-popup h2 {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--reza-text);
+  text-align: center;
+}
+
+.profile-popup p {
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+  color: var(--reza-muted);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.profile-popup__form {
+  display: grid;
+  gap: 20px;
+}
+
+.profile-popup__group {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-popup__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--reza-text);
+}
+
+.profile-popup__input {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 1.5px solid #e8e4e4;
+  border-radius: 12px;
+  font-size: 1rem;
+  color: var(--reza-text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.profile-popup__input:focus {
+  border-color: var(--reza-red);
+}
+
+.profile-popup__error {
+  color: var(--reza-red);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.profile-popup__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.profile-popup__btn {
+  min-height: 52px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.profile-popup__btn:hover {
+  opacity: 0.9;
+}
+
+.profile-popup__btn--cancel {
+  border: 1px solid #e8e4e4;
+  background: #ffffff;
+  color: var(--reza-text);
+}
+
+.profile-popup__btn--submit {
+  border: 0;
+  background: var(--reza-red);
+  color: #ffffff;
+}
+
+.profile-popup__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

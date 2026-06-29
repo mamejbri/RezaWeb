@@ -25,11 +25,11 @@ type ProCard = {
 export class HomeComponent {
   private readonly clientSessionService = inject(ClientSessionService);
 
-  readonly categories = ['Restaurants', 'Beauté / Bien être', 'Activités'];
+  readonly categories = ['Restaurant', 'Beauté / Bien être', 'Activitée'];
 
   readonly featureCards: HomeCard[] = [
     {
-      title: 'Restaurants',
+      title: 'Restaurant',
       type: 'restaurant',
       image: 'assets/images/restaurant-bg.png'
     },
@@ -39,7 +39,7 @@ export class HomeComponent {
       image: 'assets/images/soin-bg.jpg'
     },
     {
-      title: 'Activités',
+      title: 'Activitée',
       type: 'activite',
       image: 'assets/images/activites-bg.jpg'
     }
