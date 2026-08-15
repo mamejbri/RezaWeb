@@ -1,0 +1,73 @@
+<main class="recherche-page">
+  <header class="recherche-topbar">
+    <a class="recherche-brand" routerLink="/" aria-label="Reza accueil">
+      <img class="recherche-brand__logo" src="assets/images/logo.png" alt="Reza" />
+    </a>
+
+    <nav class="recherche-nav" aria-label="Navigation principale">
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }" routerLinkActive="nav-link--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Restaurant</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }" routerLinkActive="nav-link--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Beauté
+        / Bien être</a>
+      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }" routerLinkActive="nav-link--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Activitée</a>
+    </nav>
+
+    @if (isAuthenticated) {
+    <a class="recherche-avatar" routerLink="/profile" aria-label="Profil utilisateur"
+      [style.background-image]="avatarStyle" [class.recherche-avatar--image]="!!avatarStyle"></a>
+    } @else {
+    <div class="recherche-topbar__actions">
+      <a class="recherche-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
+      <a class="recherche-topbar__login" routerLink="/auth">Se connecter</a>
+    </div>
+    }
+  </header>
+
+  <section class="recherche-hero" [style.background-image]="'url(' + typeConfig.image + ')'">
+    <div class="recherche-hero__overlay"></div>
+
+    <div class="recherche-hero__content">
+      <h1>Book ta Reza</h1>
+      <p class="recherche-hero__tagline">
+        <span>Rapide</span>
+        <span class="recherche-hero__dot" aria-hidden="true"></span>
+        <span>Simple</span>
+        <span class="recherche-hero__dot" aria-hidden="true"></span>
+        <span>24h/24</span>
+      </p>
+
+      <form class="recherche-search" (ngSubmit)="submitSearch()">
+        <input
+          type="text"
+          name="search"
+          placeholder="Nom du restaurant, Type ...."
+          [(ngModel)]="searchText"
+          autocomplete="off"
+        />
+        <button type="submit" class="recherche-search__button" aria-label="Rechercher">
+          <span class="recherche-search__icon" aria-hidden="true"></span>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <section class="recherche-cities">
+    <h2>Choisissez votre ville</h2>
+
+    @if (citiesLoading) {
+    <p class="recherche-cities__status">Chargement des villes...</p>
+    } @else {
+    <div class="recherche-cities__grid">
+      @for (city of cities; track city) {
+      <button type="button" class="recherche-city-chip" (click)="selectCity(city)">{{ city }}</button>
+      }
+    </div>
+    }
+
+    <button type="button" class="recherche-skip" (click)="skipToAllResults()">
+      Voir tous les établissements
+    </button>
+  </section>
+</main>

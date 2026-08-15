@@ -131,9 +131,9 @@
                       @if (prestation.prixFixe) {
                       {{ prestation.prixFixe }} MAD
                       } @else if (prestation.prixMin && prestation.prixMax) {
-                      {{ prestation.prixMin }}-{{ prestation.prixMax }} MAD
+                      {{ prestation.prixMin }} - {{ prestation.prixMax }} MAD
                       } @else {
-                      Prix sur demande
+                      Sur devis
                       }
                     </div>
                     @if (prestation.durationMinutes) {
@@ -147,6 +147,18 @@
               }
             </div>
             }
+          </div>
+          }
+
+          @if (selectedPrestation && showActivityQuantityStep) {
+          <div class="booking-row booking-row--counter">
+            <strong>{{ activityQuantityLabel }}</strong>
+            <div class="booking-counter">
+              <button type="button" (click)="updateActivityQuantity(-1)">-</button>
+              <span>{{ selectedActivityQuantity }}</span>
+              <button type="button" [disabled]="!canIncrementActivityQuantity"
+                (click)="updateActivityQuantity(1)">+</button>
+            </div>
           </div>
           }
         </div>
@@ -205,9 +217,7 @@
           }
         </div>
 
-        @if (reservationMessage) {
-        <p class="booking-message booking-message--success">{{ reservationMessage }}</p>
-        } @else if (reservationError) {
+        @if (reservationError) {
         <p class="booking-message booking-message--error">{{ reservationError }}</p>
         }
 
@@ -346,6 +356,21 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+  }
+
+  @if (showConfirmationPopup) {
+  <div class="profile-popup" role="dialog" aria-modal="true">
+    <div class="profile-popup__container confirmation-popup__container">
+      <div class="confirmation-popup__icon">✓</div>
+      <h2>Réservation envoyée</h2>
+      <p>{{ confirmationMessage }}</p>
+
+      <button type="button" class="profile-popup__btn profile-popup__btn--submit confirmation-popup__btn"
+        (click)="closeConfirmationPopup()">
+        OK
+      </button>
     </div>
   </div>
   }

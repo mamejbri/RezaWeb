@@ -9,8 +9,13 @@ import { AvisResponse, AvisService } from '../../services/avis.service';
 import { ClientService } from '../../services/client.service';
 import { ClientSessionService } from '../../services/client-session.service';
 import { API_PUBLIC_BASE_URL } from '../../services/api.config';
-import { EtablissementDetail, EtablissementsService } from '../../services/etablissements.service';
-import { ReservationDto, ReservationService, UpdateReservationPayload } from '../../services/reservation.service';
+import { EtablissementDetail, EtablissementsService, Prestation } from '../../services/etablissements.service';
+import {
+  ReservationDto,
+  ReservationService,
+  ReservationStatus,
+  UpdateReservationPayload
+} from '../../services/reservation.service';
 
 type ReservationView = 'future' | 'past';
 
@@ -21,6 +26,9 @@ type EditState = {
   slots: string[];
   loadingSlots: boolean;
   error: string;
+  prestationId: number | null;
+  prestationOptions: Prestation[];
+  partySize: number;
 };
 
 type ReviewState = {
@@ -128,13 +136,23 @@ export class ReservationsComponent implements OnInit {
       return;
     }
 
+    // Restaurant reservations have no prestation concept — only ACTIVITY/SPA bookings
+    // (which already have one) can switch to a different prestation.
+    const policy = this.getPolicy(reservation);
+    const prestationOptions = reservation.prestationId != null
+      ? (policy?.prestations ?? []).filter((p) => p.visible && p.validated && !p.showAsUnavailable && !p.hidden)
+      : [];
+
     this.editState = {
       reservationId: reservation.id,
       date: reservation.date,
       time: this.trimTime(reservation.heureDebut),
       slots: [],
       loadingSlots: false,
-      error: ''
+      error: '',
+      prestationId: reservation.prestationId ?? null,
+      prestationOptions,
+      partySize: reservation.partySize && reservation.partySize > 0 ? reservation.partySize : 1
     };
     this.loadEditSlots(reservation);
   }
@@ -151,6 +169,51 @@ export class ReservationsComponent implements OnInit {
     this.editState.date = date;
     this.editState.time = '';
     this.loadEditSlots(reservation);
+  }
+
+  setEditPrestation(reservation: ReservationDto, prestationId: number): void {
+    if (!this.editState) {
+      return;
+    }
+
+    this.editState.prestationId = prestationId;
+    this.editState.time = '';
+
+    const max = this.editMaxPartySize;
+    if (max != null && this.editState.partySize > max) {
+      this.editState.partySize = max;
+    }
+
+    this.loadEditSlots(reservation);
+  }
+
+  adjustEditPartySize(reservation: ReservationDto, delta: number): void {
+    if (!this.editState) {
+      return;
+    }
+
+    const max = this.editMaxPartySize;
+    let next = Math.max(1, this.editState.partySize + delta);
+    if (max != null) {
+      next = Math.min(next, max);
+    }
+
+    if (next === this.editState.partySize) {
+      return;
+    }
+
+    this.editState.partySize = next;
+    this.editState.time = '';
+    this.loadEditSlots(reservation);
+  }
+
+  get editMaxPartySize(): number | null {
+    if (!this.editState?.prestationId) {
+      return null;
+    }
+
+    const prestation = this.editState.prestationOptions.find((p) => p.id === this.editState!.prestationId);
+    return prestation?.ressourceSummaries?.[0]?.maxParReservation ?? null;
   }
 
   selectEditTime(slot: string): void {
@@ -180,7 +243,9 @@ export class ReservationsComponent implements OnInit {
       dateReservation: this.editState.date,
       heureDebut: this.normalizeTimeForApi(this.editState.time),
       heureFin: this.getUpdatedEndTime(reservation),
-      statut: reservation.statut
+      statut: reservation.statut,
+      prestationId: this.editState.prestationId,
+      partySize: this.editState.partySize
     };
 
     this.actionLoadingId = reservation.id;
@@ -363,6 +428,72 @@ export class ReservationsComponent implements OnInit {
     return time ? time.slice(0, 5) : '';
   }
 
+  formatTimeRange(reservation: ReservationDto): string {
+    const start = this.trimTime(reservation.heureDebut);
+    const end = this.trimTime(reservation.heureFin);
+    return end && end !== start ? `${start} – ${end}` : start;
+  }
+
+  formatDuration(minutes: number | null | undefined): string | null {
+    if (!minutes || minutes <= 0) {
+      return null;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+
+    if (hours === 0) {
+      return `${remainder} min`;
+    }
+
+    return remainder === 0 ? `${hours} h` : `${hours} h ${String(remainder).padStart(2, '0')}`;
+  }
+
+  formatPrice(price: number | null | undefined): string | null {
+    if (price == null) {
+      return null;
+    }
+
+    return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(price)} MAD`;
+  }
+
+  statusLabel(statut: ReservationStatus): string {
+    switch (statut) {
+      case 'PENDING':
+        return 'En attente';
+      case 'CONFIRMED':
+        return 'Confirmée';
+      case 'COMPLETED':
+        return 'Terminée';
+      case 'CLIENT_CANCELLED':
+        return 'Annulée par vous';
+      case 'CANCELLED':
+        return 'Annulée';
+      case 'REJECTED':
+        return 'Refusée';
+      default:
+        return statut;
+    }
+  }
+
+  statusClass(statut: ReservationStatus): string {
+    switch (statut) {
+      case 'CONFIRMED':
+        return 'status-badge--confirmed';
+      case 'PENDING':
+        return 'status-badge--pending';
+      case 'COMPLETED':
+        return 'status-badge--completed';
+      case 'REJECTED':
+        return 'status-badge--rejected';
+      case 'CANCELLED':
+      case 'CLIENT_CANCELLED':
+        return 'status-badge--cancelled';
+      default:
+        return '';
+    }
+  }
+
   resolveImageUrl(imageUrl: string | null | undefined): string | null {
     if (!imageUrl) {
       return null;
@@ -454,9 +585,11 @@ export class ReservationsComponent implements OnInit {
     this.editState.slots = [];
 
     const date = this.editState.date;
-    const request: Observable<{ slots: string[] } | null> = reservation.prestationId
+    const prestationId = this.editState.prestationId;
+    const quantity = this.editState.partySize > 0 ? this.editState.partySize : 1;
+    const request: Observable<{ slots: string[] } | null> = prestationId
       ? this.availabilityService
-          .getPrestationAvailability(reservation.etablissementId, reservation.prestationId, date)
+          .getPrestationAvailability(reservation.etablissementId, prestationId, date, quantity, reservation.id)
           .pipe(catchError(() => of(null)))
       : this.availabilityService
           .getRestaurantAvailability(reservation.etablissementId, date)
@@ -519,7 +652,7 @@ export class ReservationsComponent implements OnInit {
       return reservation.heureFin ?? null;
     }
 
-    const duration = reservation.prestationDuration;
+    const duration = this.selectedPrestationDuration(reservation);
     if (!duration) {
       return reservation.heureFin ? this.normalizeTimeForApi(this.trimTime(reservation.heureFin)) : null;
     }
@@ -529,6 +662,15 @@ export class ReservationsComponent implements OnInit {
     date.setHours(hours, minutes + duration, 0, 0);
 
     return this.normalizeTimeForApi(`${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`);
+  }
+
+  private selectedPrestationDuration(reservation: ReservationDto): number | null | undefined {
+    if (!this.editState?.prestationId || this.editState.prestationId === reservation.prestationId) {
+      return reservation.prestationDuration;
+    }
+
+    const prestation = this.editState.prestationOptions.find((p) => p.id === this.editState!.prestationId);
+    return prestation?.durationMinutes ?? reservation.prestationDuration;
   }
 
   private getReservationDateTime(reservation: ReservationDto): Date {

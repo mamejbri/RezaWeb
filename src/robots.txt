@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /profile
+Disallow: /reservations
+Disallow: /reset-password
+Disallow: /forgot-password
+
+Sitemap: https://client.booktareza.com/sitemap.xml

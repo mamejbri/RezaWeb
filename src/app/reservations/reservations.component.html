@@ -79,7 +79,10 @@
           </div>
 
           <div class="reservation-item__body">
-            <h2>{{ reservation.name }}</h2>
+            <div class="reservation-item__head">
+              <h2>{{ reservation.name }}</h2>
+              <span class="status-badge" [class]="statusClass(reservation.statut)">{{ statusLabel(reservation.statut) }}</span>
+            </div>
 
             <p class="reservation-item__address">
               <span class="reservation-item__icon">📍</span>
@@ -87,9 +90,12 @@
             </p>
 
             @if (reservation.prestationName) {
-            <p class="reservation-item__service">{{ reservation.prestationName }}</p>
-            } @else if (reservation.partySize) {
-            <p class="reservation-item__service">{{ reservation.partySize }} personne(s)</p>
+            <p class="reservation-item__service">
+              {{ reservation.prestationName }}
+              @if (formatDuration(reservation.prestationDuration); as duration) {
+              <span class="reservation-item__service-duration">· {{ duration }}</span>
+              }
+            </p>
             }
 
             <div class="reservation-item__meta">
@@ -100,9 +106,24 @@
 
               <div class="reservation-badge reservation-badge--time">
                 <span class="reservation-badge__icon">◷</span>
-                <span>{{ trimTime(reservation.heureDebut) }}</span>
+                <span>{{ formatTimeRange(reservation) }}</span>
               </div>
+
+              @if (reservation.partySize) {
+              <div class="reservation-badge reservation-badge--chip">
+                <span class="reservation-badge__icon">👥</span>
+                <span>{{ reservation.partySize }} pers.</span>
+              </div>
+              }
+
+              @if (formatPrice(reservation.price); as price) {
+              <div class="reservation-badge reservation-badge--chip reservation-badge--price">
+                <span>{{ price }}</span>
+              </div>
+              }
             </div>
+
+            <p class="reservation-item__ref">Réservation #{{ reservation.id }}</p>
 
             @if (view === 'future') {
             @if (editState?.reservationId === reservation.id) {
@@ -112,6 +133,28 @@
                 <span>Date</span>
                 <input type="date" [ngModel]="edit.date" (ngModelChange)="setEditDate(reservation, $event)" />
               </label>
+
+              @if (edit.prestationOptions.length > 0) {
+              <label>
+                <span>Prestation</span>
+                <select [ngModel]="edit.prestationId" (ngModelChange)="setEditPrestation(reservation, $event)">
+                  @for (p of edit.prestationOptions; track p.id) {
+                  <option [ngValue]="p.id">{{ p.nom }}</option>
+                  }
+                </select>
+              </label>
+              }
+
+              <div class="reservation-edit__party">
+                <span>Nombre de personnes</span>
+                <div class="reservation-edit__stepper">
+                  <button type="button" (click)="adjustEditPartySize(reservation, -1)"
+                    [disabled]="edit.partySize <= 1">−</button>
+                  <span>{{ edit.partySize }}</span>
+                  <button type="button" (click)="adjustEditPartySize(reservation, 1)"
+                    [disabled]="editMaxPartySize != null && edit.partySize >= editMaxPartySize">+</button>
+                </div>
+              </div>
 
               <div class="reservation-edit__slots">
                 @if (edit.loadingSlots) {

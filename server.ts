@@ -44,7 +44,11 @@ export function app(): express.Express {
 }
 
 function run(): void {
-  const port = process.env['PORT'] || 4000;
+  // Deliberately not `PORT`: on Cloud Run that variable is injected into
+  // every process in the container and set to whatever port nginx (the
+  // container's public entrypoint) is expected to listen on, so reusing it
+  // here would make this internal Node server race nginx for the same port.
+  const port = process.env['SSR_PORT'] || 4000;
 
   // Start up the Node server
   const server = app();

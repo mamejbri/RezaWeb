@@ -1,15 +1,19 @@
+@import 'assets/fonts/inter/inter.css';
+@import 'assets/fonts/montserrat/montserrat.css';
+
 html {
   scroll-behavior: smooth;
+  font-family: 'Montserrat', 'Inter', sans-serif;
 }
 
 body {
   margin: 0;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f3ebe2;
 }
 
 .topbar__nav a,
 .search-nav a,
+.recherche-nav a,
 .auth-nav a,
 .register-nav a,
 .reset-nav a,
@@ -23,6 +27,7 @@ body {
 
 .topbar__nav a::after,
 .search-nav a::after,
+.recherche-nav a::after,
 .auth-nav a::after,
 .register-nav a::after,
 .reset-nav a::after,

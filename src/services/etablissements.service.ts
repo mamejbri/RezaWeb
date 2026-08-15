@@ -12,6 +12,7 @@ export type EtablissementCard = {
   name: string;
   slug: string;
   address: string;
+  city: string | null;
   rating: number;
   reviewCount: number;
   imageUrl: string | null;
@@ -43,6 +44,16 @@ export type PrestationCategorie = {
   description?: string | null;
 };
 
+export type RessourceType = 'CLASSIQUE' | 'CAPACITE_PARTAGEE';
+
+export type RessourceSummary = {
+  id: number;
+  nom: string;
+  type: RessourceType;
+  /** Optional cap on units/places requestable in a single reservation. Absent/null = no cap. */
+  maxParReservation?: number | null;
+};
+
 export type Prestation = {
   id: number;
   nom: string;
@@ -51,6 +62,7 @@ export type Prestation = {
   prixMin?: number | null;
   prixMax?: number | null;
   durationMinutes?: number | null;
+  preparationTimeMinutes?: number | null;
   categorie?: {
     id: number;
     nom: string;
@@ -59,6 +71,7 @@ export type Prestation = {
   validated: boolean;
   showAsUnavailable: boolean;
   hidden: boolean;
+  ressourceSummaries?: RessourceSummary[] | null;
 };
 
 export type EtablissementDetail = {
@@ -66,6 +79,7 @@ export type EtablissementDetail = {
   nom: string;
   slug?: string | null;
   address?: string | null;
+  city?: string | null;
   description?: string | null;
   imageUrl?: string | null;
   photoPaths?: string[] | null;
@@ -82,10 +96,12 @@ export type EtablissementDetail = {
   priseRdvMaxUnite?: BookingPolicyUnit | null;
   annulationRdvValeur?: number | null;
   annulationRdvUnite?: BookingPolicyUnit | null;
+  dureeAffichageCreneaux?: number | null;
 };
 
 type EtablissementSearchRequest = {
   text: string | null;
+  city: string | null;
   cuisine: number[];
   regime: number[];
   ambiance: number[];
@@ -102,6 +118,8 @@ type EtablissementSearchRequest = {
 export type EtablissementSearchFilters = Partial<
   Pick<
     EtablissementSearchRequest,
+    | 'text'
+    | 'city'
     | 'cuisine'
     | 'regime'
     | 'ambiance'
@@ -141,6 +159,17 @@ export class EtablissementsService {
 
   getBySlug(slug: string): Observable<EtablissementDetail> {
     return this.http.get<EtablissementDetail>(`${API_BASE_URL}/etablissements/find/by/slug/${slug}`);
+  }
+
+  getCities(type?: RezaSearchType): Observable<string[]> {
+    const params: Record<string, string> = {};
+    if (type) {
+      params['type'] = this.mapSearchTypeToBusinessType(type);
+    }
+
+    return this.http
+      .get<string[]>(`${API_BASE_URL}/etablissements/cities`, { params })
+      .pipe(catchError(() => of<string[]>([])));
   }
 
   getCategoriesByEtablissement(etablissementId: number): Observable<PrestationCategorie[]> {
@@ -202,7 +231,8 @@ export class EtablissementsService {
 
   private buildSearchRequest(type: RezaSearchType, filters: EtablissementSearchFilters): EtablissementSearchRequest {
     return {
-      text: null,
+      text: filters.text?.trim() || null,
+      city: filters.city?.trim() || null,
       cuisine: filters.cuisine ?? [],
       regime: filters.regime ?? [],
       ambiance: filters.ambiance ?? [],
@@ -234,6 +264,7 @@ export class EtablissementsService {
       name: item.nom,
       slug: item.slug ?? '',
       address: item.address?.trim() || 'Adresse non renseignee',
+      city: item.city?.trim() || null,
       rating: item.averageRating ?? 0,
       reviewCount: item.reviewCount ?? 0,
       imageUrl: this.resolveImageUrl(item) ?? 'assets/images/default_image.jpg'

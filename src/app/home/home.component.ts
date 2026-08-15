@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { ClientSessionService } from '../../services/client-session.service';
+import { SeoService } from '../../services/seo.service';
 
 type HomeCard = {
   title: string;
@@ -22,8 +23,17 @@ type ProCard = {
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   private readonly clientSessionService = inject(ClientSessionService);
+  private readonly seoService = inject(SeoService);
+
+  ngOnInit(): void {
+    this.seoService.update({
+      title: 'Réservez restaurants, soins et activités',
+      description: 'Réservez en ligne vos restaurants, soins bien-être et activités près de chez vous. Recherche, disponibilités en temps réel et confirmation immédiate.',
+      path: '/'
+    });
+  }
 
   readonly categories = ['Restaurant', 'Beauté / Bien être', 'Activitée'];
 

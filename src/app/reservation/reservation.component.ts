@@ -8,8 +8,9 @@ import { AvailabilityService, PrestationAvailabilityResponse, RestaurantAvailabi
 import { AvisListItem, AvisService, ReviewSummary } from '../../services/avis.service';
 import { ClientSessionService } from '../../services/client-session.service';
 import { ClientService } from '../../services/client.service';
-import { EtablissementDetail, EtablissementsService, Prestation, PrestationCategorie } from '../../services/etablissements.service';
+import { EtablissementDetail, EtablissementsService, Prestation, PrestationCategorie, RessourceType } from '../../services/etablissements.service';
 import { CreateReservationPayload, ReservationService } from '../../services/reservation.service';
+import { SeoService } from '../../services/seo.service';
 
 type ReservationTab = 'rendezvous' | 'menu' | 'avis' | 'apropos';
 
@@ -29,6 +30,7 @@ export class ReservationComponent implements OnInit {
   private readonly etablissementsService = inject(EtablissementsService);
   private readonly availabilityService = inject(AvailabilityService);
   private readonly reservationService = inject(ReservationService);
+  private readonly seoService = inject(SeoService);
   private readonly route = inject(ActivatedRoute);
 
   @ViewChild('thumbsContainer', { static: false }) thumbsContainer!: ElementRef<HTMLDivElement>;
@@ -38,7 +40,6 @@ export class ReservationComponent implements OnInit {
   loading = true;
   errorMessage = '';
   availabilityMessage = '';
-  reservationMessage = '';
   reservationError = '';
   slotsLoading = false;
   reservationLoading = false;
@@ -49,6 +50,8 @@ export class ReservationComponent implements OnInit {
   popupLastName = '';
   popupLoading = false;
   popupError = '';
+  showConfirmationPopup = false;
+  confirmationMessage = '';
 
   gallery: string[] = [];
   menuImages: string[] = [];
@@ -72,6 +75,64 @@ export class ReservationComponent implements OnInit {
 
   selectedPrestation: Prestation | null = null;
   prestationSlots: string[] = [];
+  selectedActivityQuantity = 1;
+  /** Slots still bookable if the quantity were bumped by one — drives graying out the "+" stepper. */
+  private activityNextQuantitySlots: string[] = [];
+
+  get activityRessourceType(): RessourceType | null {
+    const summaries = this.selectedPrestation?.ressourceSummaries;
+    return summaries && summaries.length > 0 ? summaries[0].type : null;
+  }
+
+  /** Cap on units/places requestable in one booking, when exactly one ressource drives this prestation. Null = no cap. */
+  get activityMaxQuantity(): number | null {
+    const summaries = this.selectedPrestation?.ressourceSummaries;
+    if (!summaries || summaries.length !== 1) {
+      return null;
+    }
+    return summaries[0].maxParReservation ?? null;
+  }
+
+  /**
+   * Whether the quantity stepper is worth showing at all. Hidden when the prestation has no
+   * ressource to count (nothing to pick a quantity of) or when the ressource caps at 1 per
+   * booking (e.g. a padel court — you reserve a slot, not "N courts").
+   */
+  get showActivityQuantityStep(): boolean {
+    const summaries = this.selectedPrestation?.ressourceSummaries;
+    if (!summaries || summaries.length === 0) {
+      return false;
+    }
+    return this.activityMaxQuantity !== 1;
+  }
+
+  /**
+   * Whether the "+" quantity stepper should be enabled: false once the max-per-booking cap is
+   * hit, once bumping the quantity would make the currently selected time slot unbookable, or —
+   * before any time is picked — once no slot at all that day can accommodate the next quantity
+   * (e.g. only 6 terrains exist, so quantity 7 has zero available slots all day).
+   */
+  get canIncrementActivityQuantity(): boolean {
+    const max = this.activityMaxQuantity;
+    if (max != null && this.selectedActivityQuantity >= max) {
+      return false;
+    }
+    if (this.selectedTime) {
+      return this.activityNextQuantitySlots.includes(this.selectedTime);
+    }
+    return this.activityNextQuantitySlots.length > 0;
+  }
+
+  get activityQuantityLabel(): string {
+    const summaries = this.selectedPrestation?.ressourceSummaries;
+    if (summaries && summaries.length === 1 && summaries[0].type === 'CLASSIQUE') {
+      return `Combien de ${summaries[0].nom} souhaitez-vous réserver ?`;
+    }
+    if (this.activityRessourceType === 'CAPACITE_PARTAGEE') {
+      return 'Combien de places souhaitez-vous réserver ?';
+    }
+    return 'Quantité';
+  }
 
   get isAuthenticated(): boolean {
     return this.clientSessionService.isAuthenticated();
@@ -140,22 +201,24 @@ export class ReservationComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      const slug = this.route.snapshot.paramMap.get('slug');
-      if (slug) {
-        this.loadEtablissementBySlug(slug);
-      } else {
-        const id = Number(sessionStorage.getItem('selectedEtablissementId')) || 0;
-        if (id) {
-          this.loadEtablissementById(id);
-        } else {
-          this.loading = false;
-          this.errorMessage = "Impossible de charger l'etablissement.";
-        }
-      }
-    } else {
-      this.loading = false;
+    const slug = this.route.snapshot.paramMap.get('slug');
+    if (slug) {
+      // Runs on both server and browser: this is what lets /reservation/:slug
+      // render real establishment content for crawlers during SSR.
+      this.loadEtablissementBySlug(slug);
+      return;
     }
+
+    if (isPlatformBrowser(this.platformId)) {
+      const id = Number(sessionStorage.getItem('selectedEtablissementId')) || 0;
+      if (id) {
+        this.loadEtablissementById(id);
+        return;
+      }
+    }
+
+    this.loading = false;
+    this.errorMessage = "Impossible de charger l'etablissement.";
   }
 
   private loadEtablissementBySlug(slug: string): void {
@@ -205,6 +268,22 @@ export class ReservationComponent implements OnInit {
     this.loading = false;
     this.loadReviews();
     this.loadAvailability();
+    this.updateSeo(etablissement);
+  }
+
+  private updateSeo(etablissement: EtablissementDetail): void {
+    const slug = etablissement.slug ?? this.route.snapshot.paramMap.get('slug');
+    const city = etablissement.city ? ` à ${etablissement.city}` : '';
+    const description = etablissement.description?.trim()
+      || `Réservez chez ${etablissement.nom}${city}. Consultez les disponibilités et confirmez votre créneau en ligne sur Reza.`;
+
+    this.seoService.update({
+      title: `${etablissement.nom}${city}`,
+      description,
+      path: slug ? `/reservation/${slug}` : '/reservation',
+      image: this.etablissementsService.getDisplayImage(etablissement),
+      type: 'business.business'
+    });
   }
 
   setTab(tab: ReservationTab): void {
@@ -271,11 +350,21 @@ export class ReservationComponent implements OnInit {
     this.selectedPeople = Math.max(1, this.selectedPeople + step);
   }
 
+  updateActivityQuantity(step: 1 | -1): void {
+    let next = Math.max(1, this.selectedActivityQuantity + step);
+    const max = this.activityMaxQuantity;
+    if (max != null) {
+      next = Math.min(max, next);
+    }
+    this.selectedActivityQuantity = next;
+    this.selectedTime = '';
+    this.loadPrestationAvailability();
+  }
+
   onDateChanged(): void {
     this.applyDateBounds();
     this.selectedTime = '';
     this.availabilityMessage = '';
-    this.reservationMessage = '';
     this.reservationError = '';
 
     if (this.isRestaurant) {
@@ -291,7 +380,6 @@ export class ReservationComponent implements OnInit {
 
   selectTime(slot: string): void {
     this.selectedTime = slot;
-    this.reservationMessage = '';
     this.reservationError = '';
   }
 
@@ -315,7 +403,7 @@ export class ReservationComponent implements OnInit {
   selectPrestation(prestation: Prestation): void {
     this.selectedPrestation = prestation;
     this.selectedTime = '';
-    this.reservationMessage = '';
+    this.selectedActivityQuantity = 1;
     this.reservationError = '';
     this.loadPrestationAvailability();
   }
@@ -356,7 +444,6 @@ export class ReservationComponent implements OnInit {
   }
 
   confirmReservation(): void {
-    this.reservationMessage = '';
     this.reservationError = '';
 
     if (this.reservationLoading) {
@@ -418,6 +505,7 @@ export class ReservationComponent implements OnInit {
       payload.partySize = this.selectedPeople;
     } else {
       payload.prestationId = this.selectedPrestation!.id;
+      payload.partySize = this.selectedActivityQuantity;
     }
 
     this.reservationLoading = true;
@@ -425,11 +513,11 @@ export class ReservationComponent implements OnInit {
     this.reservationService.createFlex(payload).subscribe({
       next: () => {
         this.reservationLoading = false;
-        this.reservationMessage = this.isRestaurant
-          ? 'Votre demande de reservation a ete envoyee.'
-          : 'Votre reservation est confirmee.';
-        this.selectedTime = '';
-        this.loadAvailability();
+        this.confirmationMessage = this.isRestaurant
+          ? 'Votre demande de réservation a été envoyée. Vous recevrez une confirmation dès que l\'établissement l\'aura acceptée.'
+          : 'Votre réservation a été approuvée.';
+        this.showConfirmationPopup = true;
+        this.resetBookingForm();
       },
       error: (error) => {
         this.reservationLoading = false;
@@ -478,6 +566,28 @@ export class ReservationComponent implements OnInit {
   closeProfilePopup(): void {
     this.showProfilePopup = false;
     this.popupError = '';
+  }
+
+  closeConfirmationPopup(): void {
+    this.showConfirmationPopup = false;
+    this.confirmationMessage = '';
+  }
+
+  /** Wipes the booking form back to its initial state after a successful reservation, in place — no page reload. */
+  private resetBookingForm(): void {
+    this.selectedDate = new Date().toISOString().slice(0, 10);
+    this.selectedPeople = 2;
+    this.selectedTime = '';
+    this.selectedPrestation = null;
+    this.selectedActivityQuantity = 1;
+    this.expandedCategoryId = null;
+    this.prestationSlots = [];
+    this.midiSlots = [];
+    this.soirSlots = [];
+    this.availabilityMessage = '';
+    this.reservationError = '';
+    this.applyDateBounds();
+    this.loadAvailability();
   }
 
   formatReviewDate(value: string | null | undefined): string {
@@ -632,7 +742,12 @@ export class ReservationComponent implements OnInit {
     this.prestationSlots = [];
 
     this.availabilityService
-      .getPrestationAvailability(this.etablissement.id, this.selectedPrestation.id, this.selectedDate)
+      .getPrestationAvailability(
+        this.etablissement.id,
+        this.selectedPrestation.id,
+        this.selectedDate,
+        this.selectedActivityQuantity
+      )
       .pipe(
         catchError(() => {
           this.slotsLoading = false;
@@ -660,6 +775,35 @@ export class ReservationComponent implements OnInit {
         }
 
         this.prestationSlots = bookableSlots;
+      });
+
+    this.refreshNextQuantityAvailability();
+  }
+
+  /** Fetches availability one quantity above the current selection, to know whether "+" should stay enabled. */
+  private refreshNextQuantityAvailability(): void {
+    this.activityNextQuantitySlots = [];
+
+    if (!this.etablissement?.id || !this.selectedPrestation?.id) {
+      return;
+    }
+
+    const max = this.activityMaxQuantity;
+    const nextQuantity = this.selectedActivityQuantity + 1;
+    if (max != null && nextQuantity > max) {
+      return;
+    }
+
+    this.availabilityService
+      .getPrestationAvailability(
+        this.etablissement.id,
+        this.selectedPrestation.id,
+        this.selectedDate,
+        nextQuantity
+      )
+      .pipe(catchError(() => of(null)))
+      .subscribe((response: PrestationAvailabilityResponse | null) => {
+        this.activityNextQuantitySlots = response ? this.filterBookableSlots(response.slots) : [];
       });
   }
 
@@ -700,6 +844,14 @@ export class ReservationComponent implements OnInit {
   }
 
   private getEarliestBookableDateTime(): Date {
+    const dureeAffichage = this.etablissement?.dureeAffichageCreneaux ?? 0;
+    const prepTime = this.selectedPrestation?.preparationTimeMinutes ?? 0;
+    const minDelayMinutes = Math.max(dureeAffichage, prepTime);
+
+    if (minDelayMinutes > 0) {
+      return this.addPolicyDuration(new Date(), minDelayMinutes, 'MINUTE');
+    }
+
     return this.addPolicyDuration(
       new Date(),
       this.etablissement?.bookingRules?.minBookingValue ?? this.etablissement?.priseRdvMinValeur,
@@ -781,7 +933,7 @@ export class ReservationComponent implements OnInit {
       return 'Impossible de confirmer la reservation.';
     }
 
-    if (message.includes('Aucun collaborateur disponible')) {
+    if (message.includes('Aucun collaborateur disponible') || message.includes('Aucune disponibilité')) {
       return 'Ce creneau vient de devenir indisponible. Choisissez un autre horaire.';
     }
 

@@ -54,6 +54,11 @@ export const routes: Routes = [
       import('./profile/profile.component').then((m) => m.ProfileComponent)
   },
   {
+    path: 'recherche',
+    loadComponent: () =>
+      import('./recherche/recherche.component').then((m) => m.RechercheComponent)
+  },
+  {
     path: 'etablissementrecherche',
     loadComponent: () =>
       import('./etablissementrecherche/etablissementrecherche.component').then(

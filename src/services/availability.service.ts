@@ -38,15 +38,25 @@ export class AvailabilityService {
     );
   }
 
-  getPrestationAvailability(etablissementId: number, prestationId: number, date: string): Observable<PrestationAvailabilityResponse> {
+  getPrestationAvailability(
+    etablissementId: number,
+    prestationId: number,
+    date: string,
+    quantity = 1,
+    excludeReservationId?: number | null
+  ): Observable<PrestationAvailabilityResponse> {
+    const params: Record<string, string> = {
+      etablissementId: etablissementId.toString(),
+      date,
+      quantity: String(quantity)
+    };
+    if (excludeReservationId != null) {
+      params['excludeReservationId'] = String(excludeReservationId);
+    }
+
     return this.http.get<PrestationAvailabilityResponse>(
       `${API_BASE_URL}/availability/prestations/${prestationId}/slots`,
-      {
-        params: {
-          etablissementId: etablissementId.toString(),
-          date
-        }
-      }
+      { params }
     );
   }
 }

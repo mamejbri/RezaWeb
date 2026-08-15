@@ -52,6 +52,8 @@ export type UpdateReservationPayload = {
   heureDebut: string;
   heureFin: string | null;
   statut: ReservationStatus;
+  prestationId?: number | null;
+  partySize?: number | null;
 };
 
 export type CancelReservationPayload = {

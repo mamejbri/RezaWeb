@@ -30,7 +30,7 @@
 
     <div class="hero-cards">
       @for (card of featureCards; track card.type) {
-      <a class="hero-card" routerLink="/etablissementrecherche" [queryParams]="{ type: card.type }">
+      <a class="hero-card" routerLink="/recherche" [queryParams]="{ type: card.type }">
         <img [src]="card.image" [alt]="card.title" />
         <span>{{ card.title }}</span>
       </a>

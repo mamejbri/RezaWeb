@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { ClientSessionService } from '../../services/client-session.service';
 import { AuthService } from '../../services/auth.service';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-register',
@@ -12,10 +13,11 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly seoService = inject(SeoService);
 
   nom = '';
   prenom = '';
@@ -37,6 +39,14 @@ export class RegisterComponent {
 
   get avatarStyle(): string | null {
     return this.clientSessionService.avatarStyle();
+  }
+
+  ngOnInit(): void {
+    this.seoService.update({
+      title: 'Créer un compte',
+      description: 'Créez votre compte Reza pour réserver restaurants, soins et activités en ligne.',
+      path: '/register'
+    });
   }
 
   register(): void {

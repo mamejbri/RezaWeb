@@ -318,6 +318,12 @@ button {
   font-size: 1.75rem;
 }
 
+.booking-counter button:disabled {
+  background: #d9d9d9;
+  color: #8a8a8a;
+  cursor: not-allowed;
+}
+
 .booking-counter span {
   display: inline-grid;
   place-items: center;
@@ -976,4 +982,26 @@ button {
 .profile-popup__btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.confirmation-popup__container {
+  text-align: center;
+}
+
+.confirmation-popup__icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #1f7a45;
+  color: #ffffff;
+  font-size: 1.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirmation-popup__btn {
+  width: 100%;
 }

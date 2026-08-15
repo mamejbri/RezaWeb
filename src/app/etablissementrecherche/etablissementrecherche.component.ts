@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
-import { Subject, catchError, forkJoin, map, of, takeUntil } from 'rxjs';
+import { Subject, catchError, forkJoin, of, takeUntil } from 'rxjs';
 
 import { AvisService } from '../../services/avis.service';
 import { ClientSessionService } from '../../services/client-session.service';
@@ -14,6 +14,13 @@ import {
   RezaSearchType
 } from '../../services/etablissements.service';
 import { FilterGroup, FilterGroupDto, FilterOption, FilterService } from '../../services/filter.service';
+import { SeoService } from '../../services/seo.service';
+
+const TYPE_LABELS: Record<RezaSearchType, string> = {
+  restaurant: 'Restaurants',
+  soin: 'Beauté / Bien être',
+  activite: 'Activités'
+};
 
 @Component({
   selector: 'app-etablissementrecherche',
@@ -29,9 +36,12 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   private readonly avisService = inject(AvisService);
   private readonly etablissementsService = inject(EtablissementsService);
   private readonly filterService = inject(FilterService);
+  private readonly seoService = inject(SeoService);
   private readonly destroy$ = new Subject<void>();
 
   selectedType: RezaSearchType = 'restaurant';
+  selectedCity = '';
+  selectedText = '';
   filterGroups: FilterGroupDto[] = [];
   selectedFilters: Partial<Record<FilterGroup, FilterOption[]>> = {};
   activeFilterGroup: FilterGroupDto | null = null;
@@ -42,18 +52,27 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   filterSearchText = '';
   sortByRating = false;
 
+  get typeLabel(): string {
+    return TYPE_LABELS[this.selectedType];
+  }
+
   ngOnInit(): void {
     this.route.queryParamMap
-      .pipe(
-        map((params) => (params.get('type') as RezaSearchType | null) ?? 'restaurant'),
-        takeUntil(this.destroy$)
-      )
-      .subscribe((type) => {
-        this.selectedType = type;
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((params) => {
+        this.selectedType = (params.get('type') as RezaSearchType | null) ?? 'restaurant';
+        this.selectedCity = params.get('city') ?? '';
+        this.selectedText = params.get('text') ?? '';
         this.selectedFilters = {};
         this.activeFilterGroup = null;
         this.loadFilters();
         this.search();
+
+        this.seoService.update({
+          title: `${this.typeLabel}${this.selectedCity ? ' à ' + this.selectedCity : ''}`,
+          description: `Trouvez et réservez ${this.typeLabel.toLowerCase()}${this.selectedCity ? ' à ' + this.selectedCity : ''} en quelques clics sur Reza.`,
+          path: '/etablissementrecherche'
+        });
       });
   }
 
@@ -238,6 +257,8 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
 
   private buildSearchFilters(): EtablissementSearchFilters {
     return {
+      text: this.selectedText,
+      city: this.selectedCity,
       cuisine: this.getSelectedIds('CUISINE'),
       regime: this.getSelectedIds('REGIME_ALIMENTAIRE'),
       ambiance: this.getSelectedIds('CADRE_AMBIANCE'),
