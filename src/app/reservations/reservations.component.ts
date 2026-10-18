@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Observable, catchError, forkJoin, of } from 'rxjs';
@@ -9,6 +10,7 @@ import { AvisResponse, AvisService } from '../../services/avis.service';
 import { ClientService } from '../../services/client.service';
 import { ClientSessionService } from '../../services/client-session.service';
 import { API_PUBLIC_BASE_URL } from '../../services/api.config';
+import { isSlotUnavailable } from '../../services/api-errors';
 import { EtablissementDetail, EtablissementsService, Prestation } from '../../services/etablissements.service';
 import {
   ReservationDto,
@@ -17,6 +19,10 @@ import {
   UpdateReservationPayload
 } from '../../services/reservation.service';
 
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { MoneyPipe } from '../../i18n/money.pipe';
 type ReservationView = 'future' | 'past';
 
 type EditState = {
@@ -48,12 +54,13 @@ type ReservationReviewMap = Record<number, AvisResponse | null>;
 @Component({
   selector: 'app-reservations',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive],
+  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent, MoneyPipe],
   templateUrl: './reservations.component.html',
   styleUrl: './reservations.component.css'
 })
 export class ReservationsComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly i18n = inject(LanguageService);
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly clientService = inject(ClientService);
   private readonly avisService = inject(AvisService);
@@ -61,6 +68,7 @@ export class ReservationsComponent implements OnInit {
   private readonly etablissementsService = inject(EtablissementsService);
   private readonly availabilityService = inject(AvailabilityService);
   private readonly router = inject(Router);
+  private readonly platformId = inject(PLATFORM_ID);
 
   view: ReservationView = 'future';
   upcomingReservations: ReservationDto[] = [];
@@ -76,6 +84,11 @@ export class ReservationsComponent implements OnInit {
   successMessage = '';
 
   ngOnInit(): void {
+    // No token on the server: render the shell there and let the browser load (or redirect).
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     if (!this.isAuthenticated) {
       void this.router.navigateByUrl('/auth');
       return;
@@ -97,7 +110,7 @@ export class ReservationsComponent implements OnInit {
         this.loadReservations();
       },
       error: () => {
-        this.errorMessage = 'Impossible de charger votre profil.';
+        this.errorMessage = this.i18n.t('reservations.profileError');
       }
     });
   }
@@ -132,7 +145,7 @@ export class ReservationsComponent implements OnInit {
     this.errorMessage = '';
 
     if (!this.canChangeReservation(reservation)) {
-      this.errorMessage = "Cette reservation n'est plus modifiable.";
+      this.errorMessage = this.i18n.t('reservations.notEditable');
       return;
     }
 
@@ -229,13 +242,13 @@ export class ReservationsComponent implements OnInit {
     }
 
     if (!this.canChangeReservation(reservation)) {
-      this.errorMessage = "Cette reservation n'est plus modifiable.";
+      this.errorMessage = this.i18n.t('reservations.notEditable');
       this.editState = null;
       return;
     }
 
     if (!this.editState.time) {
-      this.editState.error = 'Selectionnez un horaire.';
+      this.editState.error = this.i18n.t('reservations.selectTime');
       return;
     }
 
@@ -253,12 +266,19 @@ export class ReservationsComponent implements OnInit {
       next: () => {
         this.actionLoadingId = null;
         this.editState = null;
-        this.successMessage = 'Votre Reza a ete modifiee.';
+        this.successMessage = this.i18n.t('reservations.updated');
         this.loadReservations();
       },
-      error: () => {
+      error: (error) => {
         this.actionLoadingId = null;
-        this.errorMessage = 'Impossible de modifier cette Reza.';
+        if (isSlotUnavailable(error) && this.editState) {
+          // Someone else got the slot first: keep the editor open with fresh slots.
+          this.errorMessage = this.i18n.t('booking.slotJustTaken');
+          this.editState.time = '';
+          this.loadEditSlots(reservation);
+          return;
+        }
+        this.errorMessage = this.i18n.t('reservations.updateError');
       }
     });
   }
@@ -269,7 +289,7 @@ export class ReservationsComponent implements OnInit {
     }
 
     if (!this.canChangeReservation(reservation)) {
-      this.errorMessage = "Cette reservation n'est plus annulable.";
+      this.errorMessage = this.i18n.t('reservations.notCancellable');
       return;
     }
 
@@ -278,19 +298,19 @@ export class ReservationsComponent implements OnInit {
       next: () => {
         this.actionLoadingId = null;
         this.editState = null;
-        this.successMessage = 'Votre Reza a ete annulee.';
+        this.successMessage = this.i18n.t('reservations.cancelled');
         this.loadReservations();
       },
       error: () => {
         this.actionLoadingId = null;
-        this.errorMessage = 'Impossible d annuler cette Reza.';
+        this.errorMessage = this.i18n.t('reservations.cancelError');
       }
     });
   }
 
   leaveReview(reservation: ReservationDto): void {
     if (!this.clientId) {
-      this.errorMessage = 'Impossible de trouver votre profil client.';
+      this.errorMessage = this.i18n.t('reservations.clientNotFound');
       return;
     }
 
@@ -323,7 +343,7 @@ export class ReservationsComponent implements OnInit {
         }
 
         this.reviewState.loading = false;
-        this.reviewState.error = 'Impossible de charger cet avis.';
+        this.reviewState.error = this.i18n.t('reservations.reviewLoadError');
       }
     });
   }
@@ -350,7 +370,7 @@ export class ReservationsComponent implements OnInit {
     const contenu = this.reviewState.contenu.trim();
 
     if (!this.reviewState.rating || this.reviewState.rating < 1 || this.reviewState.rating > 5) {
-      this.reviewState.error = 'Choisissez une note entre 1 et 5.';
+      this.reviewState.error = this.i18n.t('reservations.ratingRequired');
       return;
     }
 
@@ -375,7 +395,7 @@ export class ReservationsComponent implements OnInit {
           this.reviewState.existingReview = review;
           this.reviewState.contenu = review.contenu ?? '';
           this.reviewState.rating = review.rating ?? this.reviewState.rating;
-          this.successMessage = 'Votre avis a ete enregistre.';
+          this.successMessage = this.i18n.t('reservations.reviewSaved');
         },
         error: () => {
           if (!this.reviewState) {
@@ -383,7 +403,7 @@ export class ReservationsComponent implements OnInit {
           }
 
           this.reviewState.saving = false;
-          this.reviewState.error = 'Impossible d enregistrer votre avis.';
+          this.reviewState.error = this.i18n.t('reservations.reviewSaveError');
         }
       });
   }
@@ -416,7 +436,7 @@ export class ReservationsComponent implements OnInit {
 
   formatDate(dateValue: string): string {
     const date = new Date(`${dateValue}T12:00:00`);
-    return new Intl.DateTimeFormat('fr-FR', {
+    return new Intl.DateTimeFormat(this.i18n.locale, {
       weekday: 'long',
       day: '2-digit',
       month: 'short',
@@ -443,37 +463,18 @@ export class ReservationsComponent implements OnInit {
     const remainder = minutes % 60;
 
     if (hours === 0) {
-      return `${remainder} min`;
+      return this.i18n.t('common.minutes', { n: remainder });
     }
 
-    return remainder === 0 ? `${hours} h` : `${hours} h ${String(remainder).padStart(2, '0')}`;
-  }
-
-  formatPrice(price: number | null | undefined): string | null {
-    if (price == null) {
-      return null;
-    }
-
-    return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(price)} MAD`;
+    return remainder === 0
+      ? this.i18n.t('common.hours', { h: hours })
+      : this.i18n.t('common.hoursMinutes', { h: hours, m: String(remainder).padStart(2, '0') });
   }
 
   statusLabel(statut: ReservationStatus): string {
-    switch (statut) {
-      case 'PENDING':
-        return 'En attente';
-      case 'CONFIRMED':
-        return 'Confirmée';
-      case 'COMPLETED':
-        return 'Terminée';
-      case 'CLIENT_CANCELLED':
-        return 'Annulée par vous';
-      case 'CANCELLED':
-        return 'Annulée';
-      case 'REJECTED':
-        return 'Refusée';
-      default:
-        return statut;
-    }
+    const key = `reservations.status.${statut}`;
+    const label = this.i18n.t(key);
+    return label === key ? statut : label;
   }
 
   statusClass(statut: ReservationStatus): string {
@@ -504,6 +505,11 @@ export class ReservationsComponent implements OnInit {
     }
 
     return `${API_PUBLIC_BASE_URL}${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+  }
+
+  /** Establishment picture, or the default image when it has none. */
+  reservationImage(imageUrl: string | null | undefined): string {
+    return this.resolveImageUrl(imageUrl) ?? 'assets/images/default_image.jpg';
   }
 
   private loadReservations(): void {
@@ -603,14 +609,14 @@ export class ReservationsComponent implements OnInit {
       this.editState.loadingSlots = false;
 
       if (!response || !('slots' in response) || response.slots.length === 0) {
-        this.editState.error = 'Aucun creneau disponible pour cette date.';
+        this.editState.error = this.i18n.t('reservations.noSlots');
         return;
       }
 
       this.editState.slots = response.slots.filter((slot: string) => this.isEditSlotBookable(reservation, date, slot));
 
       if (this.editState.slots.length === 0) {
-        this.editState.error = 'Aucun creneau modifiable selon les regles de reservation.';
+        this.editState.error = this.i18n.t('reservations.noEditableSlots');
       }
     });
   }

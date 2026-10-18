@@ -39,7 +39,9 @@ export class ClientSessionService {
       return;
     }
 
-    if (this.loadingSignal() || (!force && this.profileSignal())) {
+    // force=true (e.g. right after login) must bypass the loading guard so a
+    // stuck in-flight request from a previous page load never silently blocks it.
+    if (!force && (this.loadingSignal() || this.profileSignal())) {
       return;
     }
 
@@ -50,6 +52,8 @@ export class ClientSessionService {
         this.loadingSignal.set(false);
       },
       error: () => {
+        // The interceptor already calls logout() on 401.
+        // For other failures (500, network) just reset loading so a retry is possible.
         this.loadingSignal.set(false);
       }
     });

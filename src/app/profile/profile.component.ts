@@ -1,4 +1,5 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -7,18 +8,23 @@ import { AuthService } from '../../services/auth.service';
 import { ClientSessionService } from '../../services/client-session.service';
 import { ClientService, type ClientProfile } from '../../services/client.service';
 
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive],
+  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
 export class ProfileComponent implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly i18n = inject(LanguageService);
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly clientService = inject(ClientService);
   private readonly router = inject(Router);
+  private readonly platformId = inject(PLATFORM_ID);
 
   profile: ClientProfile | null = null;
   loading = true;
@@ -71,6 +77,11 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // No token on the server: keep the loading state there, the browser loads the profile.
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     this.clientService.getMe().subscribe({
       next: (profile) => {
         this.applyProfile(profile);
@@ -78,7 +89,7 @@ export class ProfileComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'Impossible de charger le profil client.';
+        this.errorMessage = this.i18n.t('profile.loadError');
       }
     });
   }
@@ -118,7 +129,7 @@ export class ProfileComponent implements OnInit {
     };
 
     if (!payload.firstName || !payload.lastName || !payload.email || !payload.phone) {
-      this.infoErrorMessage = 'Remplissez tous les champs avant de sauvegarder.';
+      this.infoErrorMessage = this.i18n.t('profile.fillAll');
       this.infoMessage = '';
       return;
     }
@@ -132,11 +143,11 @@ export class ProfileComponent implements OnInit {
         this.applyProfile(profile);
         this.infoSaving = false;
         this.infoEditMode = false;
-        this.infoMessage = 'Vos informations ont ete mises a jour.';
+        this.infoMessage = this.i18n.t('profile.infoSaved');
       },
       error: () => {
         this.infoSaving = false;
-        this.infoErrorMessage = 'Impossible de mettre a jour vos informations.';
+        this.infoErrorMessage = this.i18n.t('profile.infoError');
       }
     });
   }
@@ -154,17 +165,17 @@ export class ProfileComponent implements OnInit {
     this.passwordErrorMessage = '';
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      this.passwordErrorMessage = 'Remplissez les trois champs du mot de passe.';
+      this.passwordErrorMessage = this.i18n.t('profile.fillPasswords');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      this.passwordErrorMessage = 'La confirmation du nouveau mot de passe ne correspond pas.';
+      this.passwordErrorMessage = this.i18n.t('profile.passwordMismatch');
       return;
     }
 
     if (currentPassword === newPassword) {
-      this.passwordErrorMessage = 'Le nouveau mot de passe doit etre different de l ancien.';
+      this.passwordErrorMessage = this.i18n.t('profile.passwordSame');
       return;
     }
 
@@ -173,7 +184,7 @@ export class ProfileComponent implements OnInit {
     this.authService.changePassword({ currentPassword, newPassword }).subscribe({
       next: () => {
         this.passwordSaving = false;
-        this.passwordMessage = 'Votre mot de passe a ete modifie.';
+        this.passwordMessage = this.i18n.t('profile.passwordChanged');
         this.passwordForm = {
           currentPassword: '',
           newPassword: '',
@@ -182,7 +193,7 @@ export class ProfileComponent implements OnInit {
       },
       error: () => {
         this.passwordSaving = false;
-        this.passwordErrorMessage = 'Verification du mot de passe actuel impossible.';
+        this.passwordErrorMessage = this.i18n.t('profile.passwordError');
       }
     });
   }
@@ -216,7 +227,7 @@ export class ProfileComponent implements OnInit {
       })
       .catch(() => {
         this.photoLoading = false;
-        this.photoErrorMessage = 'Impossible de mettre à jour la photo.';
+        this.photoErrorMessage = this.i18n.t('profile.photoError');
         input.value = '';
       });
   }

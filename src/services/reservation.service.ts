@@ -11,6 +11,8 @@ export type CreateReservationPayload = {
   time: string;
   partySize?: number;
   prestationId?: number;
+  /** Panier (multi-prestation selection) — SPA establishments only. */
+  prestationIds?: number[];
   note?: string;
 };
 

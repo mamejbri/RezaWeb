@@ -1,0 +1,6 @@
+{
+  // RezaWeb has no Java/Gradle code. Stops the Java extension from importing Gradle projects it
+  // finds through files opened from sibling folders (e.g. the React Native app's android/),
+  // which spawned a new Gradle daemon every few seconds.
+  "java.import.gradle.enabled": false
+}

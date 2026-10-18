@@ -263,12 +263,12 @@
 }
 
 .register-field--password input {
-  padding-right: 64px;
+  padding-inline-end: 64px;
 }
 
 .register-field__toggle {
   position: absolute;
-  right: 22px;
+  inset-inline-end: 22px;
   top: 50%;
   transform: translateY(-50%);
   border: 0;
@@ -295,6 +295,6 @@
 
 @media (max-width: 640px) {
   .register-field__toggle {
-    right: 18px;
+    inset-inline-end: 18px;
   }
 }

@@ -1,33 +1,7 @@
 <main class="reservation-page">
-  <header class="reservation-topbar">
-    <a class="reservation-brand" routerLink="/" aria-label="Reza accueil">
-      <img class="reservation-brand__logo" src="assets/images/logo.png" alt="Reza" />
-    </a>
-
-    <nav class="reservation-nav" aria-label="Navigation principale">
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Restaurant</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Beauté
-        / Bien être</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Activitée</a>
-    </nav>
-
-    @if (isAuthenticated) {
-    <a class="reservation-avatar" routerLink="/profile" aria-label="Profil utilisateur"
-      [style.background-image]="avatarStyle" [class.reservation-avatar--image]="!!avatarStyle"></a>
-    } @else {
-    <div class="reservation-topbar__actions">
-      <a class="reservation-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
-      <a class="reservation-topbar__login" routerLink="/auth">Se connecter</a>
-    </div>
-    }
-  </header>
-
   @if (loading) {
   <section class="reservation-status">
-    <p>Chargement de l'etablissement...</p>
+    <p>{{ 'booking.loading' | t }}</p>
   </section>
   } @else if (errorMessage) {
   <section class="reservation-status reservation-status--error">
@@ -44,7 +18,7 @@
           @for (item of gallery; track item) {
           <button class="reservation-gallery__thumb"
             [class.reservation-gallery__thumb--active]="$index === activeImageIndex" type="button"
-            [attr.aria-label]="'Image ' + ($index + 1)" (click)="chooseImage($index)">
+            [attr.aria-label]="'booking.image' | t: { n: $index + 1 }" (click)="chooseImage($index)">
             <img [src]="item" alt="" />
           </button>
           }
@@ -53,7 +27,7 @@
     </section>
 
     <section class="reservation-panel">
-      <button class="reservation-back" type="button" (click)="returnToSearch()">Retour</button>
+      <button class="reservation-back" type="button" (click)="returnToSearch()">{{ 'booking.back' | t }}</button>
 
       <h1>{{ displayName }}</h1>
 
@@ -65,36 +39,47 @@
       <div class="reservation-tabs">
         <button class="reservation-tabs__item" [class.reservation-tabs__item--active]="activeTab === 'rendezvous'"
           type="button" (click)="setTab('rendezvous')">
-          Rendez-vous
+          {{ 'booking.tabs.rendezvous' | t }}
         </button>
         @if (isRestaurant) {
         <button class="reservation-tabs__item" [class.reservation-tabs__item--active]="activeTab === 'menu'"
           type="button" (click)="setTab('menu')">
-          Menu
+          {{ 'booking.tabs.menu' | t }}
         </button>
         }
         <button class="reservation-tabs__item" [class.reservation-tabs__item--active]="activeTab === 'avis'"
           type="button" (click)="setTab('avis')">
-          Avis
+          {{ 'booking.tabs.reviews' | t }}
         </button>
         <button class="reservation-tabs__item" [class.reservation-tabs__item--active]="activeTab === 'apropos'"
           type="button" (click)="setTab('apropos')">
-          A propos
+          {{ 'booking.tabs.about' | t }}
         </button>
       </div>
 
       @if (activeTab === 'rendezvous') {
       <section class="booking-card">
-        <h2>{{ isRestaurant ? 'Je reserve ma place' : 'Je reserve ma prestation' }}</h2>
+        <div class="booking-card__header">
+          <h2>{{ (isRestaurant ? 'booking.titleRestaurant' : 'booking.titlePrestation') | t }}</h2>
+          @if (isSpa) {
+          <button type="button" class="booking-panier-btn" (click)="showPanierDrawer = true"
+            [attr.aria-label]="'booking.viewCart' | t">
+            <span class="booking-panier-btn__icon" aria-hidden="true">🛍</span>
+            @if (panierCount > 0) {
+            <span class="booking-panier-btn__badge">{{ panierCount }}</span>
+            }
+          </button>
+          }
+        </div>
 
         @if (!isRestaurant) {
         <div class="booking-prestations">
-          <div class="booking-label">Choisissez une prestation</div>
+          <div class="booking-label">{{ 'booking.choosePrestation' | t }}</div>
 
           @if (categoriesLoading) {
-          <p class="booking-message">Chargement des catégories...</p>
+          <p class="booking-message">{{ 'booking.loadingCategories' | t }}</p>
           } @else if (categories.length === 0) {
-          <p class="booking-message">Aucune prestation disponible.</p>
+          <p class="booking-message">{{ 'booking.noPrestation' | t }}</p>
           } @else {
           <div class="booking-categories">
             @for (cat of categories; track cat.id) {
@@ -114,30 +99,35 @@
               @if (expandedCategoryId === cat.id) {
               <div class="booking-category__body">
                 @if (loadingCategoryId === cat.id) {
-                <p class="booking-message">Chargement des prestations...</p>
+                <p class="booking-message">{{ 'booking.loadingPrestations' | t }}</p>
                 } @else if ((prestationsByCat[cat.id] ?? []).length === 0) {
-                <p class="booking-message">Aucune prestation dans cette catégorie.</p>
+                <p class="booking-message">{{ 'booking.noPrestationInCategory' | t }}</p>
                 } @else {
                 <div class="booking-prestations__list">
                   @for (prestation of prestationsByCat[cat.id]; track prestation.id) {
                   <button class="booking-prestations__item"
-                    [class.booking-prestations__item--active]="selectedPrestation?.id === prestation.id" type="button"
+                    [class.booking-prestations__item--active]="isPrestationSelected(prestation)"
+                    [class.booking-prestations__item--panier]="isSpa" type="button"
                     (click)="selectPrestation(prestation)">
+                    @if (isSpa) {
+                    <span class="booking-prestations__check" [class.booking-prestations__check--on]="isInPanier(prestation)"
+                      aria-hidden="true">✓</span>
+                    }
                     <div class="booking-prestations__name">{{ prestation.nom }}</div>
                     @if (prestation.description) {
                     <div class="booking-prestations__description">{{ prestation.description }}</div>
                     }
                     <div class="booking-prestations__price">
                       @if (prestation.prixFixe) {
-                      {{ prestation.prixFixe }} MAD
+                      {{ prestation.prixFixe | money }}
                       } @else if (prestation.prixMin && prestation.prixMax) {
-                      {{ prestation.prixMin }} - {{ prestation.prixMax }} MAD
+                      {{ 'booking.priceRange' | t: { min: (prestation.prixMin | money), max: (prestation.prixMax | money) } }}
                       } @else {
-                      Sur devis
+                      {{ 'booking.onQuote' | t }}
                       }
                     </div>
                     @if (prestation.durationMinutes) {
-                    <div class="booking-prestations__duration">{{ prestation.durationMinutes }} min</div>
+                    <div class="booking-prestations__duration">{{ 'common.minutes' | t: { n: prestation.durationMinutes } }}</div>
                     }
                   </button>
                   }
@@ -164,7 +154,7 @@
         </div>
         } @else {
         <div class="booking-row booking-row--counter">
-          <strong>Nombre de personnes :</strong>
+          <strong>{{ 'booking.peopleCount' | t }}</strong>
           <div class="booking-counter">
             <button type="button" (click)="updatePeople(-1)">-</button>
             <span>{{ selectedPeople }}</span>
@@ -173,23 +163,24 @@
         </div>
         }
 
-        <div class="booking-label">Pour le</div>
+        @if (!isSpa || panierItems.length === 0) {
+        <div class="booking-label">{{ 'booking.forDate' | t }}</div>
         <label class="booking-date" (pointerdown)="openDatePicker(dateInput)">
           <span class="booking-date__text">{{ selectedDateLabel }}</span>
           <input #dateInput name="selectedDate" class="booking-date__input" type="date" [(ngModel)]="selectedDate"
             (change)="onDateChanged()" [attr.min]="minBookableDate" [attr.max]="maxBookableDate"
-            aria-label="Choisir une date" />
+            [attr.aria-label]="'booking.chooseDate' | t" />
         </label>
 
-        <div class="booking-label">A</div>
+        <div class="booking-label">{{ 'booking.atTime' | t }}</div>
         <div class="booking-slots">
           @if (slotsLoading) {
-          <p class="booking-message">Chargement des creneaux...</p>
+          <p class="booking-message">{{ 'booking.loadingSlots' | t }}</p>
           } @else if (availabilityMessage) {
           <p class="booking-message">{{ availabilityMessage }}</p>
           } @else if (isRestaurant) {
           <div class="booking-slots__row">
-            <span class="booking-slots__period">Midi</span>
+            <span class="booking-slots__period">{{ 'booking.lunch' | t }}</span>
             @for (slot of midiSlots; track slot) {
             <button class="booking-slots__time" [class.booking-slots__time--active]="selectedTime === slot"
               type="button" (click)="selectTime(slot)">
@@ -199,7 +190,7 @@
           </div>
 
           <div class="booking-slots__row">
-            <span class="booking-slots__period">Soir</span>
+            <span class="booking-slots__period">{{ 'booking.dinner' | t }}</span>
             @for (slot of soirSlots; track slot) {
             <button class="booking-slots__time" [class.booking-slots__time--active]="selectedTime === slot"
               type="button" (click)="selectTime(slot)">
@@ -216,37 +207,49 @@
           }
           }
         </div>
+        } @else {
+        <div class="booking-visit-locked">
+          <span class="booking-visit-locked__icon" aria-hidden="true">🕒</span>
+          {{ 'booking.visitAt' | t: { date: panierDateLabel, time: panierTime } }}
+        </div>
+        }
 
         @if (reservationError) {
         <p class="booking-message booking-message--error">{{ reservationError }}</p>
         }
 
+        @if (isSpa) {
+        <button class="booking-confirm" type="button" [disabled]="!canAddToPanier" (click)="addToPanier()">
+          {{ 'booking.addToCart' | t }}
+        </button>
+        } @else {
         <button class="booking-confirm" type="button" [disabled]="!canConfirmReservation"
           (click)="confirmReservation()">
-          {{ reservationLoading ? 'Confirmation...' : 'Je confirme ma Reza' }}
+          {{ (reservationLoading ? 'booking.confirming' : 'booking.confirm') | t }}
         </button>
+        }
       </section>
       } @else if (activeTab === 'menu') {
       <section class="reservation-section">
         @if (menuImages.length === 0) {
-        <p>Menu indisponible.</p>
+        <p>{{ 'booking.menuUnavailable' | t }}</p>
         } @else {
         <div class="reservation-section__menu">
           <button class="reservation-section__scroll-btn reservation-section__scroll-btn--left" type="button"
-            (click)="scrollMenuThumbs(-1)" aria-label="Defiler le menu vers la gauche">
+            (click)="scrollMenuThumbs(-1)" [attr.aria-label]="'booking.scrollMenuLeft' | t">
             ‹
           </button>
 
           <div class="reservation-section__images reservation-section__images--scroll" #menuThumbsContainer>
             @for (item of menuImages; track item) {
             <button type="button" class="reservation-section__menu-thumb" (click)="openMenuImage($index)">
-              <img [src]="item" alt="Photo du menu" />
+              <img [src]="item" [alt]="'booking.menuPhoto' | t" />
             </button>
             }
           </div>
 
           <button class="reservation-section__scroll-btn reservation-section__scroll-btn--right" type="button"
-            (click)="scrollMenuThumbs(1)" aria-label="Defiler le menu vers la droite">
+            (click)="scrollMenuThumbs(1)" [attr.aria-label]="'booking.scrollMenuRight' | t">
             ›
           </button>
         </div>
@@ -256,16 +259,16 @@
       @if (isMenuViewerOpen) {
       <section class="menu-viewer" role="dialog" aria-modal="true">
         <button class="menu-viewer__close" type="button" (click)="closeMenuImageViewer()"
-          aria-label="Fermer la visionneuse">×</button>
+          [attr.aria-label]="'booking.closeViewer' | t">×</button>
 
         <div class="menu-viewer__content">
           <button class="menu-viewer__nav menu-viewer__nav--left" type="button" (click)="previousMenuImage()"
-            aria-label="Image precedente">‹</button>
+            [attr.aria-label]="'booking.previousImage' | t">‹</button>
 
-          <img [src]="menuImages[activeMenuImageIndex]" alt="Menu agrandi" class="menu-viewer__image" />
+          <img [src]="menuImages[activeMenuImageIndex]" [alt]="'booking.menuZoomed' | t" class="menu-viewer__image" />
 
           <button class="menu-viewer__nav menu-viewer__nav--right" type="button" (click)="nextMenuImage()"
-            aria-label="Image suivante">›</button>
+            [attr.aria-label]="'booking.nextImage' | t">›</button>
         </div>
 
         <div class="menu-viewer__footer">
@@ -277,17 +280,17 @@
       <section class="reservation-section">
         @if (reviewSummary) {
         <div class="review-summary">
-          <strong>{{ reviewSummary.average.toFixed(1).replace('.', ',') }}</strong>
-          <span>{{ reviewSummary.count }} avis</span>
+          <strong>{{ formatAverage(reviewSummary.average) }}</strong>
+          <span>{{ 'booking.reviewCount' | t: { count: reviewSummary.count } }}</span>
         </div>
         }
 
         @if (reviewsLoading) {
-        <p>Chargement des avis...</p>
+        <p>{{ 'booking.loadingReviews' | t }}</p>
         } @else if (reviewsError) {
         <p>{{ reviewsError }}</p>
         } @else if (reviews.length === 0) {
-        <p>Aucun avis pour le moment.</p>
+        <p>{{ 'booking.noReviews' | t }}</p>
         } @else {
         <div class="review-list">
           @for (review of reviews; track review.id) {
@@ -301,11 +304,11 @@
             <p class="review-card__date">{{ formatReviewDate(review.createdDate) }}</p>
             }
 
-            <p class="review-card__content">{{ review.contenu || 'Aucun commentaire.' }}</p>
+            <p class="review-card__content">{{ review.contenu || ('booking.noComment' | t) }}</p>
 
             @if (review.reponse) {
             <div class="review-card__reply">
-              <strong>Reponse de l'etablissement</strong>
+              <strong>{{ 'booking.reply' | t }}</strong>
               <p>{{ review.reponse }}</p>
             </div>
             }
@@ -316,7 +319,7 @@
       </section>
       } @else {
       <section class="reservation-section">
-        <p>{{ etablissement?.description || 'Aucune description disponible.' }}</p>
+        <p>{{ etablissement?.description || ('booking.noDescription' | t) }}</p>
       </section>
       }
     </section>
@@ -326,18 +329,18 @@
   @if (showProfilePopup) {
   <div class="profile-popup" role="dialog" aria-modal="true">
     <div class="profile-popup__container">
-      <h2>Complétez votre profil</h2>
-      <p>Veuillez renseigner votre prénom et votre nom pour pouvoir confirmer votre réservation.</p>
+      <h2>{{ 'booking.completeProfile' | t }}</h2>
+      <p>{{ 'booking.completeProfileHint' | t }}</p>
 
       <form class="profile-popup__form" (ngSubmit)="saveProfileFromPopup()">
         <div class="profile-popup__group">
-          <label class="profile-popup__label" for="popupFirstName">Prénom</label>
+          <label class="profile-popup__label" for="popupFirstName">{{ 'booking.firstName' | t }}</label>
           <input id="popupFirstName" name="popupFirstName" type="text" class="profile-popup__input"
             [(ngModel)]="popupFirstName" required />
         </div>
 
         <div class="profile-popup__group">
-          <label class="profile-popup__label" for="popupLastName">Nom</label>
+          <label class="profile-popup__label" for="popupLastName">{{ 'booking.lastName' | t }}</label>
           <input id="popupLastName" name="popupLastName" type="text" class="profile-popup__input"
             [(ngModel)]="popupLastName" required />
         </div>
@@ -349,13 +352,63 @@
         <div class="profile-popup__actions">
           <button type="button" class="profile-popup__btn profile-popup__btn--cancel" [disabled]="popupLoading"
             (click)="closeProfilePopup()">
-            Annuler
+            {{ 'common.cancel' | t }}
           </button>
           <button type="submit" class="profile-popup__btn profile-popup__btn--submit" [disabled]="popupLoading">
-            {{ popupLoading ? 'Enregistrement...' : 'Enregistrer' }}
+            {{ (popupLoading ? 'common.saving' : 'common.save') | t }}
           </button>
         </div>
       </form>
+    </div>
+  </div>
+  }
+
+  @if (showPanierDrawer) {
+  <div class="panier-drawer" role="dialog" aria-modal="true" (click)="showPanierDrawer = false">
+    <div class="panier-drawer__container" (click)="$event.stopPropagation()">
+      <div class="panier-drawer__header">
+        <h2>{{ 'booking.myCart' | t }}</h2>
+        <button type="button" class="panier-drawer__close" (click)="showPanierDrawer = false"
+          [attr.aria-label]="'booking.closeCart' | t">×</button>
+      </div>
+
+      @if (panierItems.length === 0) {
+      <p class="booking-message">{{ 'booking.cartEmpty' | t }}</p>
+      } @else {
+      <p class="panier-drawer__visit">
+        <span aria-hidden="true">🕒</span> {{ 'booking.visitAt' | t: { date: panierDateLabel, time: panierTime } }}
+      </p>
+
+      <ul class="panier-drawer__list">
+        @for (item of panierItems; track item.id) {
+        <li class="panier-drawer__item">
+          <div class="panier-drawer__item-info">
+            <span class="panier-drawer__item-name">{{ item.nom }}</span>
+            @if (item.durationMinutes) {
+            <span class="panier-drawer__item-duration">{{ 'common.minutes' | t: { n: item.durationMinutes } }}</span>
+            }
+          </div>
+          <div class="panier-drawer__item-actions">
+            <button type="button" class="panier-drawer__action" (click)="editPanierItem(item)"
+              [attr.aria-label]="'booking.editItem' | t: { name: item.nom }">✎</button>
+            <button type="button" class="panier-drawer__action panier-drawer__action--danger"
+              (click)="removeFromPanier(item)" [attr.aria-label]="'booking.removeItem' | t: { name: item.nom }">🗑</button>
+          </div>
+        </li>
+        }
+      </ul>
+
+      <div class="panier-drawer__total">{{ 'booking.totalDuration' | t: { n: panierTotalDurationMinutes } }}</div>
+
+      @if (reservationError) {
+      <p class="booking-message booking-message--error">{{ reservationError }}</p>
+      }
+
+      <button type="button" class="panier-drawer__confirm" [disabled]="reservationLoading"
+        (click)="confirmPanier()">
+        {{ (reservationLoading ? 'booking.confirming' : 'booking.confirmCart') | t }}
+      </button>
+      }
     </div>
   </div>
   }
@@ -364,12 +417,12 @@
   <div class="profile-popup" role="dialog" aria-modal="true">
     <div class="profile-popup__container confirmation-popup__container">
       <div class="confirmation-popup__icon">✓</div>
-      <h2>Réservation envoyée</h2>
+      <h2>{{ 'booking.sent' | t }}</h2>
       <p>{{ confirmationMessage }}</p>
 
       <button type="button" class="profile-popup__btn profile-popup__btn--submit confirmation-popup__btn"
         (click)="closeConfirmationPopup()">
-        OK
+        {{ 'common.ok' | t }}
       </button>
     </div>
   </div>

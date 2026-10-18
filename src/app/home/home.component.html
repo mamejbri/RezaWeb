@@ -1,41 +1,27 @@
 <main class="home-page">
-  <header class="topbar">
-    <a class="brand" routerLink="/" aria-label="Reza accueil">
-      <img class="brand__logo" src="assets/images/logo.png" alt="Reza" />
-    </a>
-
-    <nav class="topbar__nav" aria-label="Navigation principale">
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Restaurant</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Beauté
-        / Bien être</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Activitée</a>
-    </nav>
-
-    @if (isAuthenticated) {
-    <a class="topbar__avatar" routerLink="/profile" aria-label="Mon compte" [style.background-image]="avatarStyle"
-      [class.topbar__avatar--image]="!!avatarStyle"></a>
-    } @else {
-    <div class="topbar__actions">
-      <a class="outline-button" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
-      <a class="solid-button" routerLink="/auth">Se connecter</a>
-    </div>
-    }
-  </header>
-
   <section class="hero-section">
-    <h1>Book ta REZA</h1>
+    <header class="hero-header">
+      <span class="hero-header__accent" aria-hidden="true"></span>
+      <h1>{{ 'home.title' | t }}</h1>
+      <p>{{ 'home.subtitle' | t }}</p>
+    </header>
 
     <div class="hero-cards">
       @for (card of featureCards; track card.type) {
       <a class="hero-card" routerLink="/recherche" [queryParams]="{ type: card.type }">
-        <img [src]="card.image" [alt]="card.title" />
-        <span>{{ card.title }}</span>
+        <img [src]="card.image" [alt]="card.title | t" />
+        <span class="hero-card__content">
+          <span class="hero-card__text">
+            <span class="hero-card__title">{{ card.title | t }}</span>
+            <span class="hero-card__tagline">{{ 'home.tagline.' + card.type | t }}</span>
+          </span>
+          <svg class="hero-card__chevron" width="26" height="26" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m9 5 7 7-7 7" />
+          </svg>
+        </span>
       </a>
       }
     </div>
   </section>
-
 </main>

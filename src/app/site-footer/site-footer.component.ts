@@ -1,11 +1,14 @@
 import { Component } from '@angular/core';
 
+import { TranslatePipe } from '../../i18n/translate.pipe';
+
 @Component({
   selector: 'app-site-footer',
   standalone: true,
+  imports: [TranslatePipe],
   template: `
     <footer class="site-footer">
-      <p class="site-footer__note">&copy; 2026 Reza. Powered by AXYNEA Agency. All Rights Reserved.</p>
+      <p class="site-footer__note">{{ 'footer.rights' | t }}</p>
     </footer>
   `,
   styles: [`

@@ -6,15 +6,19 @@ import { ClientSessionService } from '../../services/client-session.service';
 import { AuthService } from '../../services/auth.service';
 import { SeoService } from '../../services/seo.service';
 
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive],
+  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
 export class RegisterComponent implements OnInit {
   private readonly clientSessionService = inject(ClientSessionService);
+  private readonly i18n = inject(LanguageService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly seoService = inject(SeoService);
@@ -43,8 +47,8 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {
     this.seoService.update({
-      title: 'Créer un compte',
-      description: 'Créez votre compte Reza pour réserver restaurants, soins et activités en ligne.',
+      title: this.i18n.t('register.seoTitle'),
+      description: this.i18n.t('register.seoDescription'),
       path: '/register'
     });
   }
@@ -56,29 +60,29 @@ export class RegisterComponent implements OnInit {
     this.successMessage = '';
 
     if (!this.nom.trim() || !this.prenom.trim() || !this.phoneNumber.trim() || !this.email.trim() || !this.password.trim() || !this.confirmPassword.trim()) {
-      this.errorMessage = 'Tous les champs sont obligatoires.';
+      this.errorMessage = this.i18n.t('register.errors.required');
       return;
     }
 
     if (this.password !== this.confirmPassword) {
-      this.errorMessage = 'Les mots de passe ne correspondent pas.';
+      this.errorMessage = this.i18n.t('register.errors.passwordMismatch');
       return;
     }
 
     const phone = this.phoneNumber.trim();
     if (!phone.startsWith('+')) {
-      this.errorMessage = 'Le numéro WhatsApp doit commencer par "+". (Ex: +212...)';
+      this.errorMessage = this.i18n.t('register.errors.phonePrefix');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.email.trim())) {
-      this.errorMessage = 'Veuillez saisir une adresse e-mail valide.';
+      this.errorMessage = this.i18n.t('register.errors.invalidEmail');
       return;
     }
 
     if (!this.cguChecked) {
-      this.errorMessage = 'Vous devez accepter les CGU de Reza pour continuer.';
+      this.errorMessage = this.i18n.t('register.errors.cgu');
       return;
     }
 
@@ -93,7 +97,7 @@ export class RegisterComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.loading = false;
-        this.successMessage = 'Inscription réussie ! Redirection en cours...';
+        this.successMessage = this.i18n.t('register.success');
         setTimeout(() => {
           void this.router.navigate(['/auth']);
         }, 2000);
@@ -101,13 +105,13 @@ export class RegisterComponent implements OnInit {
       error: (err) => {
         this.loading = false;
         if (err.status === 400) {
-          this.errorMessage = 'Données d\'inscription invalides.';
+          this.errorMessage = this.i18n.t('register.errors.invalidData');
         } else if (err.error && typeof err.error === 'string') {
           this.errorMessage = err.error;
         } else if (err.error && err.error.message) {
           this.errorMessage = err.error.message;
         } else {
-          this.errorMessage = 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.';
+          this.errorMessage = this.i18n.t('register.errors.generic');
         }
       }
     });

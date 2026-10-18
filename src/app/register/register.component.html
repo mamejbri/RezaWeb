@@ -1,57 +1,31 @@
 <main class="register-page">
-  <header class="register-topbar">
-    <a class="register-brand" routerLink="/" aria-label="Reza accueil">
-      <img class="register-brand__logo" src="assets/images/logo.png" alt="Reza" />
-    </a>
-
-    <nav class="register-nav" aria-label="Navigation principale">
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Restaurant</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Beauté
-        / Bien être</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Activitée</a>
-    </nav>
-
-    @if (isAuthenticated) {
-    <a class="register-avatar" routerLink="/profile" aria-label="Mon compte" [style.background-image]="avatarStyle"
-      [class.register-avatar--image]="!!avatarStyle"></a>
-    } @else {
-    <div class="register-topbar__actions">
-      <a class="register-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
-      <a class="register-topbar__login" routerLink="/auth">Se connecter</a>
-    </div>
-    }
-  </header>
-
   <section class="register-panel">
-    <h1 style="text-align: center;">Nouveau sur Reza ? Inscrivez-vous</h1>
+    <h1 style="text-align: center;">{{ 'register.title' | t }}</h1>
 
     <form class="register-form" (ngSubmit)="register()">
       <div class="register-grid">
         <label class="register-field">
-          <input type="text" name="nom" [(ngModel)]="nom" placeholder="Nom" required />
+          <input type="text" name="nom" [(ngModel)]="nom" [placeholder]="'register.lastName' | t" required />
         </label>
 
         <label class="register-field">
-          <input type="text" name="prenom" [(ngModel)]="prenom" placeholder="Prenom" required />
+          <input type="text" name="prenom" [(ngModel)]="prenom" [placeholder]="'register.firstName' | t" required />
         </label>
       </div>
 
       <label class="register-field">
-        <input type="tel" name="phoneNumber" [(ngModel)]="phoneNumber" placeholder="Numéro Whatsapp" required />
+        <input type="tel" name="phoneNumber" [(ngModel)]="phoneNumber" [placeholder]="'register.whatsapp' | t" required />
       </label>
 
       <label class="register-field">
-        <input type="email" name="email" [(ngModel)]="email" placeholder="E-mail" required />
+        <input type="email" name="email" [(ngModel)]="email" [placeholder]="'auth.email' | t" required />
       </label>
 
       <div class="register-field register-field--password">
         <input [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="password"
-          placeholder="Mot de passe" required />
+          [placeholder]="'auth.password' | t" required />
         <button type="button" class="register-field__toggle" (click)="showPassword = !showPassword"
-          [attr.aria-label]="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+          [attr.aria-label]="(showPassword ? 'auth.hidePassword' : 'auth.showPassword') | t">
           @if (showPassword) {
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -74,9 +48,9 @@
 
       <div class="register-field register-field--password">
         <input [type]="showConfirmPassword ? 'text' : 'password'" name="confirmPassword" [(ngModel)]="confirmPassword"
-          placeholder="Confirmation du mot de passe" required />
+          [placeholder]="'register.confirmPassword' | t" required />
         <button type="button" class="register-field__toggle" (click)="showConfirmPassword = !showConfirmPassword"
-          [attr.aria-label]="showConfirmPassword ? 'Masquer la confirmation du mot de passe' : 'Afficher la confirmation du mot de passe'">
+          [attr.aria-label]="(showConfirmPassword ? 'register.hideConfirm' : 'register.showConfirm') | t">
           @if (showConfirmPassword) {
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -99,7 +73,7 @@
 
       <label class="register-check">
         <input type="checkbox" name="cguChecked" [(ngModel)]="cguChecked" required />
-        <a class="" href="https://booktareza.com/cgu/">J'accepte les CGU de REZA</a>
+        <a class="" href="https://booktareza.com/cgu/">{{ 'register.acceptCgu' | t }}</a>
       </label>
 
       @if (errorMessage) {
@@ -111,17 +85,17 @@
       }
 
       <button class="register-button" type="submit" [disabled]="loading">
-        {{ loading ? 'Inscription...' : "Créer un compte" }}
+        {{ (loading ? 'register.registering' : 'auth.createAccount') | t }}
       </button>
     </form>
 
     <div class="register-divider" aria-hidden="true">
       <span></span>
-      <strong>Ou</strong>
+      <strong>{{ 'common.or' | t }}</strong>
       <span></span>
     </div>
 
-    <p class="register-footnote">Vous avez déjà un compte Reza ? <a class="register-footnote__link"
-        routerLink="/auth">Se connecter</a></p>
+    <p class="register-footnote">{{ 'register.alreadyAccount' | t }}<a class="register-footnote__link"
+        routerLink="/auth">{{ 'nav.login' | t }}</a></p>
   </section>
 </main>

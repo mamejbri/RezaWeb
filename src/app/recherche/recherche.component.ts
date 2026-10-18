@@ -8,15 +8,19 @@ import { ClientSessionService } from '../../services/client-session.service';
 import { EtablissementsService, RezaSearchType } from '../../services/etablissements.service';
 import { SeoService } from '../../services/seo.service';
 
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 type TypeConfig = {
+  /** Translation key. */
   label: string;
   image: string;
 };
 
 const TYPE_CONFIG: Record<RezaSearchType, TypeConfig> = {
-  restaurant: { label: 'Restaurant', image: 'assets/images/restaurant-bg.png' },
-  soin: { label: 'Beauté / Bien être', image: 'assets/images/soin-bg.jpg' },
-  activite: { label: 'Activitée', image: 'assets/images/activites-bg.jpg' }
+  restaurant: { label: 'nav.restaurant', image: 'assets/images/restaurant-bg.png' },
+  soin: { label: 'nav.beauty', image: 'assets/images/soin-bg.jpg' },
+  activite: { label: 'nav.activity', image: 'assets/images/activites-bg.jpg' }
 };
 
 const DEFAULT_CITIES = ['Casablanca', 'Marrakech', 'Rabat', 'Tanger', 'Agadir', 'Fès'];
@@ -24,12 +28,13 @@ const DEFAULT_CITIES = ['Casablanca', 'Marrakech', 'Rabat', 'Tanger', 'Agadir', 
 @Component({
   selector: 'app-recherche',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive],
+  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
   templateUrl: './recherche.component.html',
   styleUrl: './recherche.component.css'
 })
 export class RechercheComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly i18n = inject(LanguageService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly clientSessionService = inject(ClientSessionService);
@@ -57,8 +62,8 @@ export class RechercheComponent implements OnInit {
     this.selectedType = (this.route.snapshot.queryParamMap.get('type') as RezaSearchType | null) ?? 'restaurant';
 
     this.seoService.update({
-      title: 'Rechercher un établissement',
-      description: 'Recherchez un restaurant, un soin bien-être ou une activité par ville et réservez votre créneau en ligne sur Reza.',
+      title: this.i18n.t('search.seoTitle'),
+      description: this.i18n.t('search.seoDescription'),
       path: '/recherche'
     });
 

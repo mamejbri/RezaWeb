@@ -216,7 +216,7 @@ button {
   position: absolute;
   width: 18px;
   height: 4px;
-  right: -14px;
+  inset-inline-end: -14px;
   bottom: -8px;
   border-radius: 999px;
   background: #000000;
@@ -405,7 +405,7 @@ button {
   color: var(--reza-text);
   font: inherit;
   font-size: 1rem;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 

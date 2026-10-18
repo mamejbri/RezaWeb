@@ -1,44 +1,18 @@
 <main class="search-page">
-  <header class="search-topbar">
-    <a class="search-brand" routerLink="/" aria-label="Reza accueil">
-      <img class="search-brand__logo" src="assets/images/logo.png" alt="Reza" />
-    </a>
-
-    <nav class="search-nav" aria-label="Navigation principale">
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'restaurant' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Restaurant</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'soin' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Beauté
-        / Bien être</a>
-      <a routerLink="/etablissementrecherche" [queryParams]="{ type: 'activite' }" routerLinkActive="nav-link--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'exact', matrixParams: 'ignored', fragment: 'ignored' }">Activitée</a>
-    </nav>
-
-    @if (isAuthenticated) {
-    <a class="search-avatar" routerLink="/profile" aria-label="Profil utilisateur"
-      [style.background-image]="avatarStyle" [class.search-avatar--image]="!!avatarStyle"></a>
-    } @else {
-    <div class="search-topbar__actions">
-      <a class="search-topbar__pro" href="https://pro.booktareza.com/login">Je suis un professionnel</a>
-      <a class="search-topbar__login" routerLink="/auth">Se connecter</a>
-    </div>
-    }
-  </header>
-
   <section class="search-summary">
     <div class="search-summary__content">
-      <h1>{{ selectedTypeLabel }}{{ selectedCity ? ' à ' + selectedCity : '' }}</h1>
-      <p>A tout moment</p>
+      <h1>{{ selectedCity ? ('results.titleInCity' | t: { type: selectedTypeLabel, city: selectedCity }) : selectedTypeLabel }}</h1>
+      <p>{{ 'results.anytime' | t }}</p>
     </div>
   </section>
 
   <section class="filters">
     @if (filtersLoading) {
-    <span class="filter-chip filter-chip--status">Chargement des filtres...</span>
+    <span class="filter-chip filter-chip--status">{{ 'results.loadingFilters' | t }}</span>
     } @else {
     <button class="filter-chip" [class.filter-chip--active]="sortByRating" type="button" (click)="toggleRatingSort()">
       <span class="filter-chip__icon filter-chip__icon--sort" aria-hidden="true"></span>
-      Trier par note
+      {{ 'results.sortByRating' | t }}
     </button>
 
     @for (group of filterGroups; track group.group) {
@@ -54,7 +28,7 @@
 
     @if (hasSelectedFilters) {
     <button class="filter-chip filter-chip--clear" type="button" (click)="clearFilters()">
-      Effacer les filtres
+      {{ 'results.clearFilters' | t }}
     </button>
     }
     }
@@ -64,17 +38,17 @@
   <section class="filter-overlay" (click)="closeFilterDrawer()"></section>
   <aside class="filter-drawer" role="dialog" aria-modal="true">
     <div class="filter-drawer__header">
-      <h2>Filtrer par {{ groupLabel(activeFilterGroup.group).toLowerCase() }}</h2>
-      <button class="filter-drawer__close" type="button" aria-label="Fermer les filtres" (click)="closeFilterDrawer()">
+      <h2>{{ 'results.filterBy' | t: { group: groupLabel(activeFilterGroup.group).toLowerCase() } }}</h2>
+      <button class="filter-drawer__close" type="button" [attr.aria-label]="'results.closeFilters' | t" (click)="closeFilterDrawer()">
         X
       </button>
     </div>
 
     <form class="filter-search" role="search" (ngSubmit)="$event.preventDefault()">
       <input class="filter-search__input" type="search" name="filterSearchText"
-        placeholder="Rechercher dans les filtres" aria-label="Rechercher dans les filtres"
+        [placeholder]="'results.searchFilters' | t" [attr.aria-label]="'results.searchFilters' | t"
         [(ngModel)]="filterSearchText" />
-      <button class="filter-search__button" type="button" aria-label="Rechercher">
+      <button class="filter-search__button" type="button" [attr.aria-label]="'common.search' | t">
         <span aria-hidden="true"></span>
       </button>
     </form>
@@ -87,7 +61,7 @@
         {{ option.libelle }}
       </button>
       } @empty {
-      <p class="filter-drawer__empty">Aucun filtre trouve</p>
+      <p class="filter-drawer__empty">{{ 'results.noFilter' | t }}</p>
       }
     </div>
   </aside>
@@ -95,15 +69,15 @@
 
   @if (loading) {
   <section class="empty-state">
-    <h2>chargement...</h2>
+    <h2>{{ 'results.loading' | t }}</h2>
   </section>
   } @else if (error) {
   <section class="empty-state">
-    <h2>impossible de charger les etablissements</h2>
+    <h2>{{ 'results.loadError' | t }}</h2>
   </section>
   } @else if (etablissements.length === 0) {
   <section class="empty-state">
-    <h2>aucun etablissement avec cette recherche</h2>
+    <h2>{{ 'results.empty' | t }}</h2>
   </section>
   } @else {
   <section class="etablissement-grid">
@@ -127,7 +101,7 @@
         <p class="etablissement-card__rating">
           <span class="rating-star">★</span>
           {{ etablissement.rating | number:'1.1-1' }}
-          ({{ etablissement.reviewCount }} Avis)
+          {{ 'results.reviewCount' | t: { count: etablissement.reviewCount } }}
         </p>
       </div>
     </a>

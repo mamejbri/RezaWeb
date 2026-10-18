@@ -16,16 +16,20 @@ import {
 import { FilterGroup, FilterGroupDto, FilterOption, FilterService } from '../../services/filter.service';
 import { SeoService } from '../../services/seo.service';
 
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+/** Translation keys. */
 const TYPE_LABELS: Record<RezaSearchType, string> = {
-  restaurant: 'Restaurants',
-  soin: 'Beauté / Bien être',
-  activite: 'Activités'
+  restaurant: 'types.restaurants',
+  soin: 'types.beauty',
+  activite: 'types.activities'
 };
 
 @Component({
   selector: 'app-etablissementrecherche',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive, DecimalPipe],
+  imports: [FormsModule, RouterLink, RouterLinkActive, DecimalPipe, TranslatePipe, LocaleSwitcherComponent],
   templateUrl: './etablissementrecherche.component.html',
   styleUrl: './etablissementrecherche.component.css'
 })
@@ -37,6 +41,7 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   private readonly etablissementsService = inject(EtablissementsService);
   private readonly filterService = inject(FilterService);
   private readonly seoService = inject(SeoService);
+  private readonly i18n = inject(LanguageService);
   private readonly destroy$ = new Subject<void>();
 
   selectedType: RezaSearchType = 'restaurant';
@@ -53,7 +58,7 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   sortByRating = false;
 
   get typeLabel(): string {
-    return TYPE_LABELS[this.selectedType];
+    return this.i18n.t(TYPE_LABELS[this.selectedType]);
   }
 
   ngOnInit(): void {
@@ -69,11 +74,15 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
         this.search();
 
         this.seoService.update({
-          title: `${this.typeLabel}${this.selectedCity ? ' à ' + this.selectedCity : ''}`,
-          description: `Trouvez et réservez ${this.typeLabel.toLowerCase()}${this.selectedCity ? ' à ' + this.selectedCity : ''} en quelques clics sur Reza.`,
+          title: this.typeLabelInCity(this.typeLabel),
+          description: this.i18n.t('results.seoDescription', { what: this.typeLabelInCity(this.typeLabel.toLowerCase()) }),
           path: '/etablissementrecherche'
         });
       });
+  }
+
+  private typeLabelInCity(type: string): string {
+    return this.selectedCity ? this.i18n.t('results.titleInCity', { type, city: this.selectedCity }) : type;
   }
 
   ngOnDestroy(): void {
@@ -144,11 +153,11 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   get selectedTypeLabel(): string {
     switch (this.selectedType) {
       case 'soin':
-        return 'Beauté / Bien être';
+        return this.i18n.t('nav.beauty');
       case 'activite':
-        return 'Activitée';
+        return this.i18n.t('nav.activity');
       default:
-        return 'Restaurant';
+        return this.i18n.t('nav.restaurant');
     }
   }
 
@@ -161,24 +170,7 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   }
 
   groupLabel(group: FilterGroup): string {
-    switch (group) {
-      case 'CUISINE':
-        return 'Type de cuisine';
-      case 'REGIME_ALIMENTAIRE':
-        return 'Régime alimentaire';
-      case 'CADRE_AMBIANCE':
-        return 'Cadre et ambiance';
-      case 'PRESTATION':
-        return 'Prestation';
-      case 'POUR_QUI':
-        return 'Pour qui';
-      case 'GAMME_PRODUIT':
-        return 'Gamme de produit';
-      case 'ACTIVITE':
-        return 'Activité';
-      case 'ENVIRONNEMENT':
-        return 'Environnement';
-    }
+    return this.i18n.t(`results.groups.${group}`);
   }
 
   groupIcon(group: FilterGroup): string {

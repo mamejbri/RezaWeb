@@ -5,15 +5,19 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ClientSessionService } from '../../services/client-session.service';
 
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive],
+  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.css'
 })
 export class ForgotPasswordComponent {
   private readonly authService = inject(AuthService);
+  private readonly i18n = inject(LanguageService);
   private readonly clientSessionService = inject(ClientSessionService);
 
   email = '';
@@ -43,11 +47,11 @@ export class ForgotPasswordComponent {
     this.authService.forgotPassword({ email }).subscribe({
       next: () => {
         this.loading = false;
-        this.successMessage = 'Si ce compte existe, un lien de reinitialisation a ete envoye.';
+        this.successMessage = this.i18n.t('forgot.success');
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'Impossible de demander la reinitialisation pour le moment.';
+        this.errorMessage = this.i18n.t('forgot.error');
       }
     });
   }

@@ -5,15 +5,19 @@ import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/r
 import { AuthService } from '../../services/auth.service';
 import { ClientSessionService } from '../../services/client-session.service';
 
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive],
+  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
   templateUrl: './auth.component.html',
   styleUrl: './auth.component.css'
 })
 export class AuthComponent {
   private readonly authService = inject(AuthService);
+  private readonly i18n = inject(LanguageService);
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -49,7 +53,7 @@ export class AuthComponent {
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'Email ou mot de passe incorrect.';
+        this.errorMessage = this.i18n.t('auth.invalidCredentials');
       }
     });
   }

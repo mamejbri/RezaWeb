@@ -149,7 +149,7 @@
 
 .auth-link {
   width: fit-content;
-  margin-left: 14px;
+  margin-inline-start: 14px;
   color: #1a1a1a;
   font-size: 0.95rem;
   font-style: italic;

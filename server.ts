@@ -4,6 +4,13 @@ import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import bootstrap from './src/main.server';
+import { SSR_LANG } from './src/i18n/language.service';
+import { DEFAULT_LANG, LANG_COOKIE, Lang, isLang, readCookie } from './src/i18n/languages';
+
+function requestLang(cookieHeader: string | undefined): Lang {
+  const lang = readCookie(cookieHeader, LANG_COOKIE);
+  return isLang(lang) ? lang : DEFAULT_LANG;
+}
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
@@ -27,14 +34,22 @@ export function app(): express.Express {
   // All regular routes use the Angular engine
   server.get('*', (req, res, next) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
+    const lang = requestLang(headers.cookie);
+    // Prerendered (SSG) pages are French. CommonEngine serves them whenever publicPath is set,
+    // so other languages drop it to force a real render (critical-CSS inlining needs it too).
+    const isDefaultLang = lang === DEFAULT_LANG;
 
     commonEngine
       .render({
         bootstrap,
         documentFilePath: indexHtml,
         url: `${protocol}://${headers.host}${originalUrl}`,
-        publicPath: browserDistFolder,
-        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
+        publicPath: isDefaultLang ? browserDistFolder : undefined,
+        inlineCriticalCss: isDefaultLang ? undefined : false,
+        providers: [
+          { provide: APP_BASE_HREF, useValue: baseUrl },
+          { provide: SSR_LANG, useValue: lang },
+        ],
       })
       .then((html) => res.send(html))
       .catch((err) => next(err));

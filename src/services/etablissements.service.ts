@@ -1,5 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+
+import { LanguageService } from '../i18n/language.service';
 import { Observable, map, of, catchError } from 'rxjs';
 
 import { API_BASE_URL, API_PUBLIC_BASE_URL } from './api.config';
@@ -140,6 +142,7 @@ type SpringPage<T> = {
 })
 export class EtablissementsService {
   private readonly http = inject(HttpClient);
+  private readonly i18n = inject(LanguageService);
 
   searchByType(type: RezaSearchType, filters: EtablissementSearchFilters = {}, page = 0, size = 20): Observable<EtablissementCard[]> {
     return this.http
@@ -263,7 +266,7 @@ export class EtablissementsService {
       id: item.id,
       name: item.nom,
       slug: item.slug ?? '',
-      address: item.address?.trim() || 'Adresse non renseignee',
+      address: item.address?.trim() || this.i18n.t('results.addressMissing'),
       city: item.city?.trim() || null,
       rating: item.averageRating ?? 0,
       reviewCount: item.reviewCount ?? 0,

@@ -5,15 +5,19 @@ import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/r
 import { AuthService } from '../../services/auth.service';
 import { ClientSessionService } from '../../services/client-session.service';
 
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive],
+  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.css'
 })
 export class ResetPasswordComponent {
   private readonly authService = inject(AuthService);
+  private readonly i18n = inject(LanguageService);
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -45,17 +49,17 @@ export class ResetPasswordComponent {
     this.successMessage = '';
 
     if (!token) {
-      this.errorMessage = 'Le lien de reinitialisation est invalide ou incomplet.';
+      this.errorMessage = this.i18n.t('reset.invalidLink');
       return;
     }
 
     if (newPassword.length < 8) {
-      this.errorMessage = 'Le nouveau mot de passe doit contenir au moins 8 caracteres.';
+      this.errorMessage = this.i18n.t('reset.tooShort');
       return;
     }
 
     if (newPassword !== this.confirmPassword.trim()) {
-      this.errorMessage = 'Les mots de passe ne correspondent pas.';
+      this.errorMessage = this.i18n.t('reset.mismatch');
       return;
     }
 
@@ -64,12 +68,12 @@ export class ResetPasswordComponent {
     this.authService.resetPassword({ token, newPassword }).subscribe({
       next: () => {
         this.loading = false;
-        this.successMessage = 'Votre mot de passe a ete reinitialise.';
+        this.successMessage = this.i18n.t('reset.success');
         setTimeout(() => void this.router.navigateByUrl('/auth'), 1200);
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'Impossible de reinitialiser ce mot de passe.';
+        this.errorMessage = this.i18n.t('reset.error');
       }
     });
   }

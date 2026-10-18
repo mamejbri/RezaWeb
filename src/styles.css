@@ -11,6 +11,12 @@ body {
   background: #f3ebe2;
 }
 
+/* Pages sit right under the shared header: keep their first child's top margin inside
+   the page background instead of letting it collapse into a strip of body color. */
+main {
+  display: flow-root;
+}
+
 .topbar__nav a,
 .search-nav a,
 .recherche-nav a,

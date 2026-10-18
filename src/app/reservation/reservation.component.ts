@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, inject, ViewChild, ElementRef, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { catchError, of } from 'rxjs';
+import { catchError, concatMap, from, of, toArray } from 'rxjs';
 
 import { AvailabilityService, PrestationAvailabilityResponse, RestaurantAvailabilityResponse } from '../../services/availability.service';
 import { AvisListItem, AvisService, ReviewSummary } from '../../services/avis.service';
@@ -11,18 +11,24 @@ import { ClientService } from '../../services/client.service';
 import { EtablissementDetail, EtablissementsService, Prestation, PrestationCategorie, RessourceType } from '../../services/etablissements.service';
 import { CreateReservationPayload, ReservationService } from '../../services/reservation.service';
 import { SeoService } from '../../services/seo.service';
+import { isSlotUnavailable } from '../../services/api-errors';
 
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { MoneyPipe } from '../../i18n/money.pipe';
 type ReservationTab = 'rendezvous' | 'menu' | 'avis' | 'apropos';
 
 @Component({
   selector: 'app-reservation',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive],
+  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent, MoneyPipe],
   templateUrl: './reservation.component.html',
   styleUrl: './reservation.component.css'
 })
 export class ReservationComponent implements OnInit {
   private readonly router = inject(Router);
+  private readonly i18n = inject(LanguageService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly avisService = inject(AvisService);
   private readonly clientSessionService = inject(ClientSessionService);
@@ -73,11 +79,76 @@ export class ReservationComponent implements OnInit {
   loadingCategoryId: number | null = null;
   expandedCategoryId: number | null = null;
 
-  selectedPrestation: Prestation | null = null;
+  /** Prestation currently being configured (picked from the list, not yet added to the panier). At most one at a time. */
+  selectedPrestations: Prestation[] = [];
   prestationSlots: string[] = [];
   selectedActivityQuantity = 1;
   /** Slots still bookable if the quantity were bumped by one — drives graying out the "+" stepper. */
   private activityNextQuantitySlots: string[] = [];
+
+  /**
+   * Panier (SPA only): prestations added to the cart for a single visit. The first item locks
+   * `panierDate`/`panierTime` as the shared visit start; later items reuse it — the backend books
+   * them back-to-back with one collaborator, so only one time is ever picked per visit.
+   */
+  panierItems: Prestation[] = [];
+  panierDate = '';
+  panierTime = '';
+  showPanierDrawer = false;
+  private pendingConfirmKind: 'reservation' | 'panier' = 'reservation';
+
+  /** First selected prestation — the reference used for availability/slot fetching and single-select flows. */
+  get selectedPrestation(): Prestation | null {
+    return this.selectedPrestations[0] ?? null;
+  }
+
+  get isSpa(): boolean {
+    return this.etablissement?.businessType === 'SPA';
+  }
+
+  get panierCount(): number {
+    return this.panierItems.length;
+  }
+
+  get panierTotalDurationMinutes(): number {
+    return this.panierItems.reduce((sum, p) => sum + (p.durationMinutes ?? 0), 0);
+  }
+
+  get panierDateLabel(): string {
+    if (!this.panierDate) {
+      return '';
+    }
+
+    const date = new Date(`${this.panierDate}T12:00:00`);
+    return new Intl.DateTimeFormat(this.i18n.locale, {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).format(date);
+  }
+
+  isPrestationSelected(prestation: Prestation): boolean {
+    return this.selectedPrestations.some((p) => p.id === prestation.id);
+  }
+
+  isInPanier(prestation: Prestation): boolean {
+    return this.panierItems.some((p) => p.id === prestation.id);
+  }
+
+  /** Whether the currently configured prestation can be added: needs a locked-in time for the first item, nothing more for the rest. */
+  get canAddToPanier(): boolean {
+    const prestation = this.selectedPrestation;
+    if (!this.isSpa || !prestation || this.isInPanier(prestation)) {
+      return false;
+    }
+
+    if (this.panierItems.length === 0) {
+      return !!this.selectedTime && this.isSlotBookable(this.selectedTime);
+    }
+
+    return true;
+  }
 
   get activityRessourceType(): RessourceType | null {
     const summaries = this.selectedPrestation?.ressourceSummaries;
@@ -126,12 +197,12 @@ export class ReservationComponent implements OnInit {
   get activityQuantityLabel(): string {
     const summaries = this.selectedPrestation?.ressourceSummaries;
     if (summaries && summaries.length === 1 && summaries[0].type === 'CLASSIQUE') {
-      return `Combien de ${summaries[0].nom} souhaitez-vous réserver ?`;
+      return this.i18n.t('booking.quantityOf', { name: summaries[0].nom });
     }
     if (this.activityRessourceType === 'CAPACITE_PARTAGEE') {
-      return 'Combien de places souhaitez-vous réserver ?';
+      return this.i18n.t('booking.quantityPlaces');
     }
-    return 'Quantité';
+    return this.i18n.t('booking.quantity');
   }
 
   get isAuthenticated(): boolean {
@@ -147,18 +218,22 @@ export class ReservationComponent implements OnInit {
   }
 
   get displayName(): string {
-    return this.etablissement?.nom ?? 'Établissement';
+    return this.etablissement?.nom ?? this.i18n.t('booking.establishment');
   }
 
   get displayAddress(): string {
-    return this.etablissement?.address?.trim() || 'Adresse indisponible';
+    return this.etablissement?.address?.trim() || this.i18n.t('booking.addressUnavailable');
   }
 
   get displayRating(): string {
     const average = this.reviewSummary?.average ?? this.etablissement?.averageRating ?? 0;
     const count = this.reviewSummary?.count ?? this.etablissement?.reviewCount ?? 0;
 
-    return `${average.toFixed(1).replace('.', ',')} (${count} AVIS)`;
+    return this.i18n.t('booking.rating', { avg: this.formatAverage(average), count });
+  }
+
+  formatAverage(average: number): string {
+    return new Intl.NumberFormat(this.i18n.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(average);
   }
 
   get hasMenu(): boolean {
@@ -183,7 +258,7 @@ export class ReservationComponent implements OnInit {
   get selectedDateLabel(): string {
     const date = new Date(`${this.selectedDate}T12:00:00`);
 
-    return new Intl.DateTimeFormat('fr-FR', {
+    return new Intl.DateTimeFormat(this.i18n.locale, {
       weekday: 'long',
       day: '2-digit',
       month: 'short',
@@ -218,7 +293,7 @@ export class ReservationComponent implements OnInit {
     }
 
     this.loading = false;
-    this.errorMessage = "Impossible de charger l'etablissement.";
+    this.errorMessage = this.i18n.t('booking.loadError');
   }
 
   private loadEtablissementBySlug(slug: string): void {
@@ -228,7 +303,7 @@ export class ReservationComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = "Impossible de charger l'etablissement.";
+        this.errorMessage = this.i18n.t('booking.loadError');
       }
     });
   }
@@ -240,7 +315,7 @@ export class ReservationComponent implements OnInit {
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = "Impossible de charger l'etablissement.";
+        this.errorMessage = this.i18n.t('booking.loadError');
       }
     });
   }
@@ -273,9 +348,9 @@ export class ReservationComponent implements OnInit {
 
   private updateSeo(etablissement: EtablissementDetail): void {
     const slug = etablissement.slug ?? this.route.snapshot.paramMap.get('slug');
-    const city = etablissement.city ? ` à ${etablissement.city}` : '';
+    const city = etablissement.city ? `, ${etablissement.city}` : '';
     const description = etablissement.description?.trim()
-      || `Réservez chez ${etablissement.nom}${city}. Consultez les disponibilités et confirmez votre créneau en ligne sur Reza.`;
+      || this.i18n.t('booking.seoDescription', { name: etablissement.nom, city });
 
     this.seoService.update({
       title: `${etablissement.nom}${city}`,
@@ -374,7 +449,7 @@ export class ReservationComponent implements OnInit {
     } else {
       // For non-restaurants without prestation selected, show reminder
       this.prestationSlots = [];
-      this.availabilityMessage = 'Sélectionnez une prestation pour voir les disponibilités.';
+      this.availabilityMessage = this.i18n.t('booking.selectPrestationForSlots');
     }
   }
 
@@ -390,7 +465,7 @@ export class ReservationComponent implements OnInit {
     }
 
     this.expandedCategoryId = categoryId;
-    this.selectedPrestation = null;
+    this.selectedPrestations = [];
     this.selectedTime = '';
     this.prestationSlots = [];
     this.availabilityMessage = '';
@@ -400,12 +475,83 @@ export class ReservationComponent implements OnInit {
     }
   }
 
+  /** Selects/deselects the prestation currently being configured (click again to deselect). */
   selectPrestation(prestation: Prestation): void {
-    this.selectedPrestation = prestation;
+    const alreadySelected = this.selectedPrestation?.id === prestation.id;
+    this.selectedPrestations = alreadySelected ? [] : [prestation];
     this.selectedTime = '';
     this.selectedActivityQuantity = 1;
     this.reservationError = '';
+
+    if (this.selectedPrestations.length === 0) {
+      this.prestationSlots = [];
+      this.availabilityMessage = this.i18n.t('booking.selectPrestationForSlots');
+      return;
+    }
+
+    if (this.isSpa && this.panierItems.length > 0) {
+      // Visit time is already locked by the first panier item — nothing to fetch.
+      this.prestationSlots = [];
+      this.availabilityMessage = '';
+      return;
+    }
+
     this.loadPrestationAvailability();
+  }
+
+  /** Adds the currently configured prestation to the panier. The first item locks the visit's date/time; later items reuse it. */
+  addToPanier(): void {
+    const prestation = this.selectedPrestation;
+    if (!this.canAddToPanier || !prestation) {
+      return;
+    }
+
+    if (this.panierItems.length === 0) {
+      this.panierDate = this.selectedDate;
+      this.panierTime = this.selectedTime;
+    }
+
+    this.panierItems = [...this.panierItems, prestation];
+    this.selectedPrestations = [];
+    this.selectedTime = '';
+    this.prestationSlots = [];
+    this.reservationError = '';
+  }
+
+  /** Removes an item from the panier. If it was the last one, the visit's date/time unlock again. */
+  removeFromPanier(prestation: Prestation): void {
+    this.panierItems = this.panierItems.filter((p) => p.id !== prestation.id);
+
+    if (this.panierItems.length === 0) {
+      this.selectedDate = this.panierDate || this.selectedDate;
+      this.panierDate = '';
+      this.panierTime = '';
+      this.applyDateBounds();
+    }
+  }
+
+  /** Pulls a panier item back out for editing: re-selects it in the list, reopening time picking if it was the last item. */
+  editPanierItem(prestation: Prestation): void {
+    this.removeFromPanier(prestation);
+    this.showPanierDrawer = false;
+    this.selectedPrestations = [prestation];
+    this.selectedActivityQuantity = 1;
+    this.selectedTime = '';
+    this.reservationError = '';
+
+    const categoryId = prestation.categorie?.id ?? null;
+    if (categoryId != null) {
+      this.expandedCategoryId = categoryId;
+      if (!this.prestationsByCat[categoryId]) {
+        this.loadPrestationsForCategory(categoryId);
+      }
+    }
+
+    if (this.panierItems.length === 0) {
+      this.loadPrestationAvailability();
+    } else {
+      this.prestationSlots = [];
+    }
   }
 
   openDatePicker(input: HTMLInputElement): void {
@@ -446,57 +592,30 @@ export class ReservationComponent implements OnInit {
   confirmReservation(): void {
     this.reservationError = '';
 
-    if (this.reservationLoading) {
-      return;
-    }
-
-    if (!this.isAuthenticated) {
-      void this.router.navigateByUrl('/auth');
-      return;
-    }
-
-    this.clientSessionService.ensureLoaded();
-    const profile = this.clientSessionService.profile();
-    const clientId = profile?.id;
-
-    if (!clientId) {
-      this.reservationError = 'Impossible de confirmer votre identite. Reessayez dans un instant.';
-      return;
-    }
-
-    if (!profile?.firstName || !profile?.lastName) {
-      this.showProfilePopup = true;
-      this.popupFirstName = profile?.firstName || '';
-      this.popupLastName = profile?.lastName || '';
-      this.popupError = '';
-      return;
-    }
-
-    if (!this.etablissement?.id) {
-      this.reservationError = "Impossible de trouver l'etablissement.";
+    if (this.reservationLoading || !this.ensureReadyToConfirm('reservation')) {
       return;
     }
 
     if (!this.selectedTime) {
-      this.reservationError = 'Selectionnez un horaire.';
+      this.reservationError = this.i18n.t('booking.selectTime');
       return;
     }
 
     if (!this.isSlotBookable(this.selectedTime)) {
-      this.reservationError = "Ce creneau n'est plus reservable.";
+      this.reservationError = this.i18n.t('booking.slotNotBookable');
       this.selectedTime = '';
       this.loadAvailability();
       return;
     }
 
     if (!this.isRestaurant && !this.selectedPrestation?.id) {
-      this.reservationError = 'Selectionnez une prestation.';
+      this.reservationError = this.i18n.t('booking.selectPrestation');
       return;
     }
 
     const payload: CreateReservationPayload = {
-      clientId,
-      etablissementId: this.etablissement.id,
+      clientId: this.clientSessionService.profile()!.id!,
+      etablissementId: this.etablissement!.id,
       date: this.selectedDate,
       time: this.selectedTime
     };
@@ -508,19 +627,132 @@ export class ReservationComponent implements OnInit {
       payload.partySize = this.selectedActivityQuantity;
     }
 
+    this.submitReservation(
+      payload,
+      this.isRestaurant
+        ? this.i18n.t('booking.pendingConfirmation')
+        : this.i18n.t('booking.approved'),
+      () => this.resetBookingForm()
+    );
+  }
+
+  /** Books each panier item as a separate reservation with sequential start times. */
+  confirmPanier(): void {
+    this.reservationError = '';
+
+    if (this.reservationLoading || !this.ensureReadyToConfirm('panier')) {
+      return;
+    }
+
+    if (this.panierItems.length === 0 || !this.panierDate || !this.panierTime) {
+      this.reservationError = this.i18n.t('booking.cartIsEmpty');
+      return;
+    }
+
+    const clientId = this.clientSessionService.profile()!.id!;
+    const etablissementId = this.etablissement!.id;
+
+    let currentTime = this.panierTime;
+    const payloads: CreateReservationPayload[] = this.panierItems.map((item) => {
+      const payload: CreateReservationPayload = {
+        clientId,
+        etablissementId,
+        date: this.panierDate,
+        time: currentTime,
+        partySize: 1,
+        prestationId: item.id,
+      };
+      if (item.durationMinutes) {
+        currentTime = this.addMinutesToTime(currentTime, item.durationMinutes);
+      }
+      return payload;
+    });
+
+    this.reservationLoading = true;
+    this.showPanierDrawer = false;
+
+    from(payloads).pipe(
+      concatMap(payload => this.reservationService.createFlex(payload)),
+      toArray()
+    ).subscribe({
+      next: () => {
+        this.reservationLoading = false;
+        this.confirmationMessage = this.i18n.t('booking.approved');
+        this.showConfirmationPopup = true;
+        this.resetPanierForm();
+      },
+      error: (error) => {
+        this.reservationLoading = false;
+        if (isSlotUnavailable(error)) {
+          this.reservationError = this.i18n.t('booking.slotJustTaken');
+          this.selectedTime = '';
+          this.loadAvailability();
+          return;
+        }
+        this.reservationError = this.getReservationErrorMessage(error?.error?.message);
+      }
+    });
+  }
+
+  private addMinutesToTime(hhmm: string, minutes: number): string {
+    const [h, m] = hhmm.slice(0, 5).split(':').map(Number);
+    const total = h * 60 + m + minutes;
+    const rh = Math.floor(total / 60) % 24;
+    const rm = total % 60;
+    return `${String(rh).padStart(2, '0')}:${String(rm).padStart(2, '0')}`;
+  }
+
+  /** Auth/profile/etablissement checks shared by both confirm flows. Remembers which flow to resume after the profile popup. */
+  private ensureReadyToConfirm(kind: 'reservation' | 'panier'): boolean {
+    if (!this.isAuthenticated) {
+      void this.router.navigateByUrl('/auth');
+      return false;
+    }
+
+    this.clientSessionService.ensureLoaded();
+    const profile = this.clientSessionService.profile();
+
+    if (!profile?.id) {
+      this.reservationError = this.i18n.t('booking.identityError');
+      return false;
+    }
+
+    if (!profile.firstName || !profile.lastName) {
+      this.showProfilePopup = true;
+      this.popupFirstName = profile.firstName || '';
+      this.popupLastName = profile.lastName || '';
+      this.popupError = '';
+      this.pendingConfirmKind = kind;
+      return false;
+    }
+
+    if (!this.etablissement?.id) {
+      this.reservationError = this.i18n.t('booking.notFound');
+      return false;
+    }
+
+    return true;
+  }
+
+  private submitReservation(payload: CreateReservationPayload, successMessage: string, onSuccess: () => void): void {
     this.reservationLoading = true;
 
     this.reservationService.createFlex(payload).subscribe({
       next: () => {
         this.reservationLoading = false;
-        this.confirmationMessage = this.isRestaurant
-          ? 'Votre demande de réservation a été envoyée. Vous recevrez une confirmation dès que l\'établissement l\'aura acceptée.'
-          : 'Votre réservation a été approuvée.';
+        this.confirmationMessage = successMessage;
         this.showConfirmationPopup = true;
-        this.resetBookingForm();
+        onSuccess();
       },
       error: (error) => {
         this.reservationLoading = false;
+        if (isSlotUnavailable(error)) {
+          // Someone else got the slot first: show what's actually left.
+          this.reservationError = this.i18n.t('booking.slotJustTaken');
+          this.selectedTime = '';
+          this.loadAvailability();
+          return;
+        }
         this.reservationError = this.getReservationErrorMessage(error?.error?.message);
       }
     });
@@ -529,7 +761,7 @@ export class ReservationComponent implements OnInit {
   saveProfileFromPopup(): void {
     const profile = this.clientSessionService.profile();
     if (!profile) {
-      this.popupError = 'Session expirée. Veuillez vous reconnecter.';
+      this.popupError = this.i18n.t('booking.sessionExpired');
       return;
     }
 
@@ -537,7 +769,7 @@ export class ReservationComponent implements OnInit {
     const lastName = this.popupLastName.trim();
 
     if (!firstName || !lastName) {
-      this.popupError = 'Le prénom et le nom sont requis.';
+      this.popupError = this.i18n.t('booking.namesRequired');
       return;
     }
 
@@ -554,11 +786,15 @@ export class ReservationComponent implements OnInit {
         this.clientSessionService.setProfile(updatedProfile);
         this.popupLoading = false;
         this.showProfilePopup = false;
-        this.confirmReservation();
+        if (this.pendingConfirmKind === 'panier') {
+          this.confirmPanier();
+        } else {
+          this.confirmReservation();
+        }
       },
       error: (err) => {
         this.popupLoading = false;
-        this.popupError = err?.error?.message || 'Une erreur est survenue lors de la mise à jour.';
+        this.popupError = err?.error?.message || this.i18n.t('booking.updateError');
       }
     });
   }
@@ -578,7 +814,7 @@ export class ReservationComponent implements OnInit {
     this.selectedDate = new Date().toISOString().slice(0, 10);
     this.selectedPeople = 2;
     this.selectedTime = '';
-    this.selectedPrestation = null;
+    this.selectedPrestations = [];
     this.selectedActivityQuantity = 1;
     this.expandedCategoryId = null;
     this.prestationSlots = [];
@@ -588,6 +824,15 @@ export class ReservationComponent implements OnInit {
     this.reservationError = '';
     this.applyDateBounds();
     this.loadAvailability();
+  }
+
+  /** Wipes the panier and the booking form after a successful multi-prestation confirmation. */
+  private resetPanierForm(): void {
+    this.panierItems = [];
+    this.panierDate = '';
+    this.panierTime = '';
+    this.showPanierDrawer = false;
+    this.resetBookingForm();
   }
 
   formatReviewDate(value: string | null | undefined): string {
@@ -600,7 +845,7 @@ export class ReservationComponent implements OnInit {
       return '';
     }
 
-    return new Intl.DateTimeFormat('fr-FR', {
+    return new Intl.DateTimeFormat(this.i18n.locale, {
       day: '2-digit',
       month: 'short',
       year: 'numeric'
@@ -665,7 +910,7 @@ export class ReservationComponent implements OnInit {
       .listForEtablissement(this.etablissement.id)
       .pipe(
         catchError(() => {
-          this.reviewsError = 'Impossible de charger les avis.';
+          this.reviewsError = this.i18n.t('booking.reviewsError');
           return of([]);
         })
       )
@@ -685,7 +930,7 @@ export class ReservationComponent implements OnInit {
       this.midiSlots = [];
       this.soirSlots = [];
       this.prestationSlots = [];
-      this.availabilityMessage = 'Sélectionnez une prestation pour voir les disponibilités.';
+      this.availabilityMessage = this.i18n.t('booking.selectPrestationForSlots');
     }
   }
 
@@ -704,7 +949,7 @@ export class ReservationComponent implements OnInit {
       .pipe(
         catchError(() => {
           this.slotsLoading = false;
-          this.availabilityMessage = 'Impossible de charger les disponibilités.';
+          this.availabilityMessage = this.i18n.t('booking.availabilityError');
           return of(null);
         })
       )
@@ -716,14 +961,14 @@ export class ReservationComponent implements OnInit {
         this.slotsLoading = false;
 
         if (!response.open || response.slots.length === 0) {
-          this.availabilityMessage = 'Aucun créneau disponible pour cette date.';
+          this.availabilityMessage = this.i18n.t('booking.noSlotsForDate');
           return;
         }
 
         const bookableSlots = this.filterBookableSlots(response.slots);
 
         if (bookableSlots.length === 0) {
-          this.availabilityMessage = 'Aucun creneau reservable selon les regles de reservation.';
+          this.availabilityMessage = this.i18n.t('booking.noSlotsByRules');
           return;
         }
 
@@ -751,7 +996,7 @@ export class ReservationComponent implements OnInit {
       .pipe(
         catchError(() => {
           this.slotsLoading = false;
-          this.availabilityMessage = 'Impossible de charger les disponibilités.';
+          this.availabilityMessage = this.i18n.t('booking.availabilityError');
           return of(null);
         })
       )
@@ -763,14 +1008,14 @@ export class ReservationComponent implements OnInit {
         this.slotsLoading = false;
 
         if (response.slots.length === 0) {
-          this.availabilityMessage = 'Aucun créneau disponible pour cette date et prestation.';
+          this.availabilityMessage = this.i18n.t('booking.noSlotsForDateAndPrestation');
           return;
         }
 
         const bookableSlots = this.filterBookableSlots(response.slots);
 
         if (bookableSlots.length === 0) {
-          this.availabilityMessage = 'Aucun creneau reservable selon les regles de reservation.';
+          this.availabilityMessage = this.i18n.t('booking.noSlotsByRules');
           return;
         }
 
@@ -930,19 +1175,19 @@ export class ReservationComponent implements OnInit {
 
   private getReservationErrorMessage(message: unknown): string {
     if (typeof message !== 'string') {
-      return 'Impossible de confirmer la reservation.';
+      return this.i18n.t('booking.confirmError');
     }
 
     if (message.includes('Aucun collaborateur disponible') || message.includes('Aucune disponibilité')) {
-      return 'Ce creneau vient de devenir indisponible. Choisissez un autre horaire.';
+      return this.i18n.t('booking.slotJustTaken');
     }
 
     if (message.includes('partySize')) {
-      return 'Indiquez le nombre de personnes.';
+      return this.i18n.t('booking.peopleRequired');
     }
 
     if (message.includes('prestationId')) {
-      return 'Selectionnez une prestation.';
+      return this.i18n.t('booking.selectPrestation');
     }
 
     return message;

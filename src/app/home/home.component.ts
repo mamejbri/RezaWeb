@@ -3,6 +3,9 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 
 import { ClientSessionService } from '../../services/client-session.service';
 import { SeoService } from '../../services/seo.service';
+import { LanguageService } from '../../i18n/language.service';
+import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 
 type HomeCard = {
   title: string;
@@ -19,37 +22,37 @@ type ProCard = {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
 export class HomeComponent implements OnInit {
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly seoService = inject(SeoService);
+  private readonly i18n = inject(LanguageService);
 
   ngOnInit(): void {
     this.seoService.update({
-      title: 'Réservez restaurants, soins et activités',
-      description: 'Réservez en ligne vos restaurants, soins bien-être et activités près de chez vous. Recherche, disponibilités en temps réel et confirmation immédiate.',
+      title: this.i18n.t('home.seoTitle'),
+      description: this.i18n.t('home.seoDescription'),
       path: '/'
     });
   }
 
-  readonly categories = ['Restaurant', 'Beauté / Bien être', 'Activitée'];
-
+  /** `title` is a translation key. */
   readonly featureCards: HomeCard[] = [
     {
-      title: 'Restaurant',
+      title: 'nav.restaurant',
       type: 'restaurant',
       image: 'assets/images/restaurant-bg.png'
     },
     {
-      title: 'Beauté / Bien être',
+      title: 'nav.beauty',
       type: 'soin',
       image: 'assets/images/soin-bg.jpg'
     },
     {
-      title: 'Activitée',
+      title: 'nav.activity',
       type: 'activite',
       image: 'assets/images/activites-bg.jpg'
     }
