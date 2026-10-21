@@ -1,101 +1,115 @@
-<main class="register-page">
-  <section class="register-panel">
-    <h1 style="text-align: center;">{{ 'register.title' | t }}</h1>
+<app-auth-shell [wide]="true">
+  @if (done) {
+  <!-- ================= SUCCESS ================= -->
+  <section class="success">
+    <span class="ca-badge filled">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    </span>
+    <h1>{{ 'authUi.successTitle' | t: { name: prenom.trim() } }}</h1>
+    <p>{{ 'authUi.successCopy' | t }}</p>
+    <a class="ca-submit" routerLink="/auth">{{ 'auth.login' | t }}</a>
+  </section>
+  } @else {
+  <header class="ca-head">
+    <h1>{{ 'authUi.registerTitle' | t }}</h1>
+    <p>{{ 'authUi.registerCopy' | t }}</p>
+  </header>
 
-    <form class="register-form" (ngSubmit)="register()">
-      <div class="register-grid">
-        <label class="register-field">
-          <input type="text" name="nom" [(ngModel)]="nom" [placeholder]="'register.lastName' | t" required />
-        </label>
+  <form class="ca-form" (ngSubmit)="register()" novalidate>
+    @if (errorMessage) {
+    <p class="ca-alert danger" role="alert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span>{{ errorMessage }}</span>
+    </p>
+    }
 
-        <label class="register-field">
-          <input type="text" name="prenom" [(ngModel)]="prenom" [placeholder]="'register.firstName' | t" required />
-        </label>
+    <div class="ca-row">
+      <div class="ca-field">
+        <label for="reg-prenom">{{ 'register.firstName' | t }}</label>
+        <span class="ca-control" [class.invalid]="tried && !prenom.trim()">
+          <svg class="ca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          <input id="reg-prenom" type="text" name="prenom" [(ngModel)]="prenom" autocomplete="given-name" />
+        </span>
       </div>
-
-      <label class="register-field">
-        <input type="tel" name="phoneNumber" [(ngModel)]="phoneNumber" [placeholder]="'register.whatsapp' | t" required />
-      </label>
-
-      <label class="register-field">
-        <input type="email" name="email" [(ngModel)]="email" [placeholder]="'auth.email' | t" required />
-      </label>
-
-      <div class="register-field register-field--password">
-        <input [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="password"
-          [placeholder]="'auth.password' | t" required />
-        <button type="button" class="register-field__toggle" (click)="showPassword = !showPassword"
-          [attr.aria-label]="(showPassword ? 'auth.hidePassword' : 'auth.showPassword') | t">
-          @if (showPassword) {
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="register-field__toggle-icon">
-            <path
-              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-            </path>
-            <line x1="1" y1="1" x2="23" y2="23"></line>
-          </svg>
-          } @else {
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="register-field__toggle-icon">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          }
-        </button>
+      <div class="ca-field">
+        <label for="reg-nom">{{ 'register.lastName' | t }}</label>
+        <span class="ca-control" [class.invalid]="tried && !nom.trim()">
+          <svg class="ca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          <input id="reg-nom" type="text" name="nom" [(ngModel)]="nom" autocomplete="family-name" />
+        </span>
       </div>
-
-      <div class="register-field register-field--password">
-        <input [type]="showConfirmPassword ? 'text' : 'password'" name="confirmPassword" [(ngModel)]="confirmPassword"
-          [placeholder]="'register.confirmPassword' | t" required />
-        <button type="button" class="register-field__toggle" (click)="showConfirmPassword = !showConfirmPassword"
-          [attr.aria-label]="(showConfirmPassword ? 'register.hideConfirm' : 'register.showConfirm') | t">
-          @if (showConfirmPassword) {
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="register-field__toggle-icon">
-            <path
-              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-            </path>
-            <line x1="1" y1="1" x2="23" y2="23"></line>
-          </svg>
-          } @else {
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            class="register-field__toggle-icon">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          }
-        </button>
-      </div>
-
-      <label class="register-check">
-        <input type="checkbox" name="cguChecked" [(ngModel)]="cguChecked" required />
-        <a class="" href="https://booktareza.com/cgu/">{{ 'register.acceptCgu' | t }}</a>
-      </label>
-
-      @if (errorMessage) {
-      <p class="register-error">{{ errorMessage }}</p>
-      }
-
-      @if (successMessage) {
-      <p class="register-success">{{ successMessage }}</p>
-      }
-
-      <button class="register-button" type="submit" [disabled]="loading">
-        {{ (loading ? 'register.registering' : 'auth.createAccount') | t }}
-      </button>
-    </form>
-
-    <div class="register-divider" aria-hidden="true">
-      <span></span>
-      <strong>{{ 'common.or' | t }}</strong>
-      <span></span>
     </div>
 
-    <p class="register-footnote">{{ 'register.alreadyAccount' | t }}<a class="register-footnote__link"
-        routerLink="/auth">{{ 'nav.login' | t }}</a></p>
-  </section>
-</main>
+    <div class="ca-field">
+      <label for="reg-phone">{{ 'register.whatsapp' | t }}</label>
+      <span class="ca-control" [class.invalid]="tried && !phoneNumber.trim().startsWith('+')">
+        <svg class="ca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <input id="reg-phone" type="tel" name="phoneNumber" [(ngModel)]="phoneNumber" placeholder="+212 6 12 34 56 78"
+          autocomplete="tel" inputmode="tel" />
+      </span>
+      <span class="ca-hint">{{ 'authUi.phoneHint' | t }}</span>
+    </div>
+
+    <div class="ca-field">
+      <label for="reg-email">{{ 'auth.email' | t }}</label>
+      <span class="ca-control" [class.invalid]="tried && !emailValid">
+        <svg class="ca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        <input id="reg-email" type="email" name="email" [(ngModel)]="email" placeholder="vous@exemple.com"
+          autocomplete="email" inputmode="email" />
+      </span>
+    </div>
+
+    <div class="ca-row">
+      <div class="ca-field">
+        <label for="reg-password">{{ 'auth.password' | t }}</label>
+        <span class="ca-control has-toggle" [class.invalid]="tried && !password.trim()">
+          <svg class="ca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input id="reg-password" [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="password"
+            autocomplete="new-password" />
+          <button type="button" class="ca-eye" (click)="showPassword = !showPassword"
+            [attr.aria-label]="(showPassword ? 'auth.hidePassword' : 'auth.showPassword') | t">
+            @if (showPassword) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+            } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            }
+          </button>
+        </span>
+      </div>
+      <div class="ca-field">
+        <label for="reg-confirm">{{ 'register.confirmPassword' | t }}</label>
+        <span class="ca-control has-toggle" [class.invalid]="tried && (!confirmPassword.trim() || confirmPassword !== password)">
+          <svg class="ca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <input id="reg-confirm" [type]="showConfirmPassword ? 'text' : 'password'" name="confirmPassword"
+            [(ngModel)]="confirmPassword" autocomplete="new-password" />
+          <button type="button" class="ca-eye" (click)="showConfirmPassword = !showConfirmPassword"
+            [attr.aria-label]="(showConfirmPassword ? 'register.hideConfirm' : 'register.showConfirm') | t">
+            @if (showConfirmPassword) {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+            } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            }
+          </button>
+        </span>
+      </div>
+    </div>
+
+    <label class="ca-check" [class.invalid]="tried && !cguChecked">
+      <input type="checkbox" name="cguChecked" [(ngModel)]="cguChecked" />
+      <span><a href="https://booktareza.com/cgu/" target="_blank" rel="noopener">{{ 'register.acceptCgu' | t }}</a></span>
+    </label>
+
+    <button class="ca-submit" type="submit" [disabled]="loading">
+      @if (loading) {
+      <span class="ca-spinner" aria-hidden="true"></span>
+      }
+      {{ (loading ? 'register.registering' : 'auth.createAccount') | t }}
+    </button>
+  </form>
+
+  <p class="ca-alt login-line">
+    {{ 'register.alreadyAccount' | t }}
+    <a class="ca-link" routerLink="/auth">{{ 'nav.login' | t }}</a>
+  </p>
+  }
+</app-auth-shell>

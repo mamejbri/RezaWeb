@@ -1,18 +1,18 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 import { ClientSessionService } from '../../services/client-session.service';
 import { AuthService } from '../../services/auth.service';
 import { SeoService } from '../../services/seo.service';
 
 import { LanguageService } from '../../i18n/language.service';
-import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AuthShellComponent],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
@@ -20,7 +20,6 @@ export class RegisterComponent implements OnInit {
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly i18n = inject(LanguageService);
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
   private readonly seoService = inject(SeoService);
 
   nom = '';
@@ -36,6 +35,14 @@ export class RegisterComponent implements OnInit {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  /** account created: the page shows the welcome state */
+  done = false;
+  /** submit was attempted: missing fields get flagged */
+  tried = false;
+
+  get emailValid(): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim());
+  }
 
   get isAuthenticated(): boolean {
     return this.clientSessionService.isAuthenticated();
@@ -55,6 +62,7 @@ export class RegisterComponent implements OnInit {
 
   register(): void {
     if (this.loading) return;
+    this.tried = true;
 
     this.errorMessage = '';
     this.successMessage = '';
@@ -98,9 +106,7 @@ export class RegisterComponent implements OnInit {
       next: () => {
         this.loading = false;
         this.successMessage = this.i18n.t('register.success');
-        setTimeout(() => {
-          void this.router.navigate(['/auth']);
-        }, 2000);
+        this.done = true;
       },
       error: (err) => {
         this.loading = false;

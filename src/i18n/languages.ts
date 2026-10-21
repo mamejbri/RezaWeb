@@ -1,4 +1,4 @@
-export type Lang = 'fr' | 'en' | 'ar' | 'es' | 'pt' | 'de' | 'tr' | 'id' | 'zh' | 'ja' | 'hi' | 'ru';
+export type Lang = 'fr' | 'en' | 'ar' | 'es' | 'pt' | 'de' | 'tr' | 'id' | 'zh' | 'ja' | 'hi' | 'ru' | 'it';
 
 export interface LanguageInfo {
   code: Lang;
@@ -21,6 +21,7 @@ export const LANGUAGES: readonly LanguageInfo[] = [
   { code: 'ja', label: '日本語', dir: 'ltr', locale: 'ja' },
   { code: 'hi', label: 'हिन्दी', dir: 'ltr', locale: 'hi' },
   { code: 'ru', label: 'Русский', dir: 'ltr', locale: 'ru' },
+  { code: 'it', label: 'Italiano', dir: 'ltr', locale: 'it' },
 ];
 
 export const DEFAULT_LANG: Lang = 'fr';

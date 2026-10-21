@@ -24,7 +24,7 @@ button {
 .reservation-page {
   min-height: 100vh;
   padding: 0 18px 28px;
-  background: #ffffff;
+  background: var(--s-card);
   color: var(--reza-text);
 }
 
@@ -39,7 +39,7 @@ button {
   width: min(1600px, 100%);
   padding: 18px 28px;
   border-radius: 24px;
-  background: linear-gradient(180deg, #faf9f9 0%, #f8f6f6 100%);
+  background: linear-gradient(180deg, var(--s-tint) 0%, var(--s-tint) 100%);
   box-shadow: 0 12px 30px rgba(17, 17, 17, 0.06);
 }
 
@@ -84,7 +84,7 @@ button {
 }
 
 .reservation-avatar--image {
-  background-color: #ece7e7;
+  background-color: var(--s-soft);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -103,7 +103,7 @@ button {
 
 .reservation-topbar__pro {
   border: 1px solid var(--reza-red);
-  background: #ffffff;
+  background: var(--s-card);
   color: var(--reza-red);
 }
 
@@ -167,7 +167,7 @@ button {
   height: 40px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--s-glass);
   color: var(--reza-text);
   font-size: 24px;
   font-weight: bold;
@@ -180,7 +180,7 @@ button {
 }
 
 .reservation-gallery__scroll-btn:hover {
-  background: rgba(255, 255, 255, 1);
+  background: var(--s-card);
 }
 
 .reservation-gallery__scroll-btn--left {
@@ -231,8 +231,11 @@ button {
   min-height: 56px;
   border: 1px solid var(--reza-red);
   border-radius: 14px;
+  background: transparent;
   color: var(--reza-red);
   font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .reservation-panel h1 {
@@ -319,8 +322,8 @@ button {
 }
 
 .booking-counter button:disabled {
-  background: #d9d9d9;
-  color: #8a8a8a;
+  background: var(--s-soft);
+  color: var(--s-ink-3);
   cursor: not-allowed;
 }
 
@@ -329,7 +332,7 @@ button {
   place-items: center;
   width: 48px;
   height: 48px;
-  background: #ffffff;
+  background: var(--s-card);
   font-size: 1.5rem;
   font-weight: 700;
 }
@@ -406,7 +409,7 @@ button {
   min-height: 48px;
   border: 0;
   border-radius: 20px;
-  background: #ffffff;
+  background: var(--s-card);
   color: var(--reza-text);
   font-size: 0.95rem;
   font-weight: 600;
@@ -473,7 +476,7 @@ button {
   padding: 16px;
   border: 2px solid var(--reza-surface);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--s-card);
   text-align: start;
   cursor: pointer;
   transition: border-color 0.2s, background-color 0.2s;
@@ -499,8 +502,8 @@ button {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 2px solid #d8d3d3;
-  background: #ffffff;
+  border: 2px solid var(--s-line);
+  background: var(--s-card);
   color: transparent;
   font-size: 0.75rem;
   line-height: 1;
@@ -575,7 +578,7 @@ button {
 }
 
 .booking-panier-btn:hover {
-  background: #ede9e9;
+  background: var(--s-soft);
 }
 
 .booking-panier-btn__icon {
@@ -625,7 +628,7 @@ button {
   width: min(420px, 100%);
   height: 100%;
   padding: 28px 24px;
-  background: #ffffff;
+  background: var(--s-card);
   box-shadow: -20px 0 60px rgba(0, 0, 0, 0.25);
   overflow-y: auto;
   animation: panierSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -739,7 +742,7 @@ button {
 }
 
 .panier-drawer__action:hover {
-  background: #ede9e9;
+  background: var(--s-soft);
 }
 
 .panier-drawer__action--danger:hover {
@@ -789,7 +792,7 @@ button {
 .booking-category {
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid #e8e4e4;
+  border: 1px solid var(--s-line);
 }
 
 .booking-category__header {
@@ -806,7 +809,7 @@ button {
 }
 
 .booking-category__header:hover {
-  background: #ede9e9;
+  background: var(--s-soft);
 }
 
 .booking-category__header--active {
@@ -836,7 +839,7 @@ button {
 
 .booking-category__body {
   padding: 14px 12px;
-  background: #ffffff;
+  background: var(--s-card);
 }
 
 .reservation-section {
@@ -875,7 +878,7 @@ button {
 .review-card {
   padding: 18px;
   border-radius: 18px;
-  background: #ffffff;
+  background: var(--s-card);
 }
 
 .review-card__header {
@@ -962,7 +965,7 @@ button {
   height: 42px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--s-glass);
   color: var(--reza-text);
   font-size: 24px;
   font-weight: 700;
@@ -973,7 +976,7 @@ button {
 }
 
 .reservation-section__scroll-btn:hover {
-  background: rgba(255, 255, 255, 1);
+  background: var(--s-card);
 }
 
 .reservation-section__scroll-btn--left {
@@ -1029,7 +1032,7 @@ button {
   height: 52px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--s-glass);
   color: var(--reza-text);
   font-size: 1.8rem;
   font-weight: 700;
@@ -1055,7 +1058,7 @@ button {
   height: 46px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--s-glass);
   color: var(--reza-text);
   font-size: 1.5rem;
   cursor: pointer;
@@ -1133,7 +1136,7 @@ button {
 }
 
 .profile-popup__container {
-  background: #ffffff;
+  background: var(--s-card);
   border-radius: 24px;
   width: min(480px, 100%);
   padding: 32px;
@@ -1187,7 +1190,7 @@ button {
   width: 100%;
   min-height: 52px;
   padding: 12px 16px;
-  border: 1.5px solid #e8e4e4;
+  border: 1.5px solid var(--s-line);
   border-radius: 12px;
   font-size: 1rem;
   color: var(--reza-text);
@@ -1230,8 +1233,8 @@ button {
 }
 
 .profile-popup__btn--cancel {
-  border: 1px solid #e8e4e4;
-  background: #ffffff;
+  border: 1px solid var(--s-line);
+  background: var(--s-card);
   color: var(--reza-text);
 }
 
@@ -1266,4 +1269,20 @@ button {
 
 .confirmation-popup__btn {
   width: 100%;
+}
+
+/* Dark mode (html.app-dark, switch in the header) */
+:host-context(html.app-dark) {
+  --reza-red: var(--c-brand);
+  --reza-surface: var(--s-tint);
+  --reza-text: var(--s-ink);
+  --reza-muted: var(--s-ink-2);
+}
+
+/* Establishment images are often transparent logos drawn in black: give them a light backing in
+   dark mode so they stay readable (opaque photos cover it entirely). */
+:host-context(html.app-dark) .reservation-gallery__hero,
+:host-context(html.app-dark) .reservation-gallery__thumb img,
+:host-context(html.app-dark) .reservation-section__images img {
+  background-color: #efebe7;
 }

@@ -1,17 +1,17 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { ClientSessionService } from '../../services/client-session.service';
 
 import { LanguageService } from '../../i18n/language.service';
-import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AuthShellComponent],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.css'
 })

@@ -6,17 +6,25 @@ import { filter } from 'rxjs';
 import { SiteFooterComponent } from './site-footer/site-footer.component';
 import { SiteHeaderComponent } from './site-header/site-header.component';
 import { TranslatePipe } from '../i18n/translate.pipe';
+import { ThemeService } from '../services/theme.service';
+
+/** Sign-in / sign-up / password pages: full-screen layout of their own, light & dark. */
+const AUTH_ROUTES = /^\/(auth|register|forgot-password|reset-password)(\/|$|\?)/;
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, SiteHeaderComponent, SiteFooterComponent, TranslatePipe],
   template: `
-    <app-site-header />
+    @if (!authLayout) {
+      <app-site-header />
+    }
     <router-outlet />
-    <app-site-footer />
+    @if (!authLayout) {
+      <app-site-footer />
+    }
 
-    @if (showScrollButton) {
+    @if (showScrollButton && !authLayout) {
       <button class="scroll-to-top" (click)="scrollToTop()" [attr.aria-label]="'common.backToTop' | t">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="18 15 12 9 6 15"></polyline>
@@ -29,7 +37,11 @@ export class AppComponent {
   private readonly title = inject(Title);
   private readonly router = inject(Router);
 
+  /** light / dark on every page */
+  private readonly theme = inject(ThemeService);
+
   showScrollButton = false;
+  authLayout = AUTH_ROUTES.test(this.router.url);
 
   constructor() {
     this.title.setTitle('REZA');
@@ -40,7 +52,8 @@ export class AppComponent {
 
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd)
-    ).subscribe(() => {
+    ).subscribe((e) => {
+      this.authLayout = AUTH_ROUTES.test(e.urlAfterRedirects);
       if (typeof window !== 'undefined') {
         window.scrollTo(0, 0);
       }

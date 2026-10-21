@@ -84,7 +84,7 @@ a {
   overflow: hidden;
   min-height: 0;
   border-radius: 22px;
-  background: #ffffff;
+  background: var(--s-card);
   box-shadow: 0 8px 14px rgba(0, 0, 0, 0.14);
   transition:
     box-shadow 220ms ease,
@@ -225,4 +225,12 @@ a {
   .hero-section {
     width: calc(100% - 40px);
   }
+}
+
+/* Dark mode (html.app-dark, switch in the header) */
+:host-context(html.app-dark) {
+  --brand: var(--c-brand);
+  --ink: var(--s-ink);
+  --muted: var(--s-ink-2);
+  --page-bg: var(--s-page);
 }

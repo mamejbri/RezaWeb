@@ -17,6 +17,16 @@
   <link rel="icon" type="image/png" href="/assets/images/logo.png?v=1">
   <link rel="shortcut icon" type="image/png" href="/assets/images/logo.png?v=1">
   <link rel="apple-touch-icon" href="/assets/images/logo.png?v=1">
+  <script>
+    // Dark mode before first paint (no light flash). Kept in sync by ThemeService.
+    (function () {
+      try {
+        var t = localStorage.getItem('reza_client.theme');
+        if (t !== 'dark' && t !== 'light') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        if (t === 'dark') { document.documentElement.classList.add('app-dark'); document.documentElement.style.colorScheme = 'dark'; }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

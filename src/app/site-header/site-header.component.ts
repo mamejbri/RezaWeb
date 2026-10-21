@@ -7,6 +7,7 @@ import { CurrencyCode, CurrencyService } from '../../i18n/currency.service';
 import { LanguageService } from '../../i18n/language.service';
 import { Lang } from '../../i18n/languages';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 
 type Menu = 'locale' | 'account' | null;
 
@@ -14,12 +15,13 @@ type Menu = 'locale' | 'account' | null;
 @Component({
   selector: 'app-site-header',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, TranslatePipe],
+  imports: [RouterLink, RouterLinkActive, TranslatePipe, ThemeToggleComponent],
   template: `
     <header class="header" [class.header--scrolled]="scrolled">
       <div class="header__inner">
         <a class="brand" routerLink="/" [attr.aria-label]="'nav.home' | t" (click)="close()">
-          <img class="brand__logo" src="assets/images/logo.png" alt="Reza" />
+          <img class="brand__logo logo-on-light" src="assets/images/logo.png" alt="Reza" />
+          <img class="brand__logo logo-on-dark" src="assets/images/logo-dark.png" alt="" aria-hidden="true" />
         </a>
 
         <nav class="nav" [attr.aria-label]="'nav.main' | t">
@@ -32,6 +34,9 @@ type Menu = 'locale' | 'account' | null;
         </nav>
 
         <div class="actions">
+          <!-- Light / dark -->
+          <app-theme-toggle />
+
           <!-- Language + currency -->
           <div class="dropdown">
             <button type="button" class="chip" [class.chip--open]="menu === 'locale'" (click)="toggle('locale')"
@@ -123,8 +128,16 @@ type Menu = 'locale' | 'account' | null;
       z-index: 50;
     }
 
+    :host-context(html.app-dark) {
+      --red: var(--c-brand);
+      --red-soft: var(--c-brand-soft);
+      --ink: var(--s-ink);
+      --muted: var(--s-ink-2);
+      --line: var(--s-line-soft);
+    }
+
     .header {
-      background: rgba(255, 255, 255, 0.94);
+      background: var(--s-glass);
       backdrop-filter: saturate(180%) blur(14px);
       -webkit-backdrop-filter: saturate(180%) blur(14px);
       border-bottom: 1px solid var(--line);
@@ -132,7 +145,7 @@ type Menu = 'locale' | 'account' | null;
     }
 
     .header--scrolled {
-      background: rgba(255, 255, 255, 0.96);
+      background: var(--s-glass-strong);
       box-shadow: 0 8px 24px rgba(17, 17, 17, 0.06);
     }
 
@@ -158,13 +171,13 @@ type Menu = 'locale' | 'account' | null;
       gap: 4px;
       padding: 4px;
       border-radius: 999px;
-      background: #f4f4f2;
+      background: var(--s-soft-2);
     }
 
     .nav__link {
       padding: 9px 18px;
       border-radius: 999px;
-      color: #344054;
+      color: var(--s-nav);
       font-size: 0.93rem;
       font-weight: 600;
       text-decoration: none;
@@ -177,7 +190,7 @@ type Menu = 'locale' | 'account' | null;
     .nav__link--active,
     .nav__link--active:hover {
       color: var(--red);
-      background: #ffffff;
+      background: var(--s-card);
       box-shadow: 0 1px 3px rgba(17, 17, 17, 0.08);
     }
 
@@ -201,7 +214,7 @@ type Menu = 'locale' | 'account' | null;
       padding: 0 12px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: #ffffff;
+      background: var(--s-card);
       color: var(--ink);
       font-size: 0.85rem;
       font-weight: 600;
@@ -227,7 +240,7 @@ type Menu = 'locale' | 'account' | null;
       height: 32px;
       flex-shrink: 0;
       border-radius: 50%;
-      background-color: #ece7e7;
+      background-color: var(--s-soft);
       background-position: center;
       background-size: cover;
       box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px rgba(197, 51, 52, 0.35);
@@ -244,7 +257,7 @@ type Menu = 'locale' | 'account' | null;
 
     .link-pro {
       padding: 0 8px;
-      color: #344054;
+      color: var(--s-nav);
       font-size: 0.88rem;
       font-weight: 600;
       text-decoration: none;
@@ -280,7 +293,7 @@ type Menu = 'locale' | 'account' | null;
       padding: 14px;
       border: 1px solid var(--line);
       border-radius: 18px;
-      background: #ffffff;
+      background: var(--s-card);
       box-shadow: 0 18px 40px rgba(17, 17, 17, 0.14);
       animation: panel-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
       transform-origin: top right;
@@ -320,7 +333,7 @@ type Menu = 'locale' | 'account' | null;
       text-align: start;
     }
 
-    .option:hover { background: #f4f4f2; }
+    .option:hover { background: var(--s-soft-2); }
     .option--active, .option--active:hover { background: var(--red-soft); color: var(--red); font-weight: 700; }
 
     .panel__row { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -329,7 +342,7 @@ type Menu = 'locale' | 'account' | null;
       padding: 6px 12px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: #ffffff;
+      background: var(--s-card);
       color: var(--ink);
       font-size: 0.82rem;
       font-weight: 600;
@@ -375,7 +388,7 @@ type Menu = 'locale' | 'account' | null;
     }
 
     .menu-item svg { color: var(--muted); }
-    .menu-item:hover { background: #f4f4f2; }
+    .menu-item:hover { background: var(--s-soft-2); }
     .menu-item--danger, .menu-item--danger svg { color: var(--red); }
     .menu-item--danger:hover { background: var(--red-soft); }
 
@@ -412,6 +425,14 @@ type Menu = 'locale' | 'account' | null;
       .nav { justify-content: flex-start; }
       .nav__link { padding: 8px 14px; font-size: 0.86rem; }
       .panel--locale { width: min(320px, calc(100vw - 32px)); }
+    }
+
+    /* small phones: language chip shows only its globe icon, so everything fits next to the switch */
+    @media (max-width: 430px) {
+      .actions { gap: 6px; }
+      .chip { width: 38px; padding: 0; justify-content: center; }
+      .chip span, .chip .chevron { display: none; }
+      .btn-login { padding: 0 12px; }
     }
   `],
 })

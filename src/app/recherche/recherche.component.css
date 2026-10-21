@@ -22,7 +22,7 @@ button {
 
 .recherche-page {
   min-height: calc(100vh - 72px);
-  background: #ffffff;
+  background: var(--s-card);
   color: var(--reza-text);
 }
 
@@ -76,7 +76,7 @@ button {
 }
 
 .recherche-avatar--image {
-  background-color: #ece7e7;
+  background-color: var(--s-soft);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -96,7 +96,7 @@ button {
 .recherche-topbar__pro {
   border: 1px solid var(--reza-red);
   color: var(--reza-red);
-  background: #ffffff;
+  background: var(--s-card);
 }
 
 .recherche-topbar__login {
@@ -221,7 +221,7 @@ button {
   bottom: -6px;
   width: 8px;
   height: 2px;
-  background: #ffffff;
+  background: var(--s-card);
   transform: rotate(45deg);
   transform-origin: right center;
 }
@@ -238,7 +238,7 @@ button {
 }
 
 .recherche-cities__status {
-  color: #5e5e5e;
+  color: var(--s-ink-2);
 }
 
 .recherche-cities__grid {
@@ -251,8 +251,8 @@ button {
 .recherche-city-chip {
   padding: 14px 30px;
   border-radius: 999px;
-  border: 1px solid #111111;
-  background: #ffffff;
+  border: 1px solid var(--s-ink);
+  background: var(--s-card);
   color: var(--reza-text);
   font-size: 1rem;
   font-weight: 600;
@@ -311,4 +311,11 @@ button {
   .recherche-topbar {
     padding-inline: 18px;
   }
+}
+
+/* Dark mode (html.app-dark, switch in the header) */
+:host-context(html.app-dark) {
+  --reza-red: var(--c-brand);
+  --reza-text: var(--s-ink);
+  --reza-surface: var(--s-tint);
 }

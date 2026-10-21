@@ -8,7 +8,6 @@ html {
 
 body {
   margin: 0;
-  background: #f3ebe2;
 }
 
 /* Pages sit right under the shared header: keep their first child's top margin inside
@@ -139,4 +138,506 @@ main {
     width: 46px;
     height: 46px;
   }
+}
+
+/* =========================================================================
+   Sign-in / sign-up / password pages — design tokens (light & dark) and form vocabulary.
+   Brand: REZA red + warm beige. Dark mode = `app-dark` on <html> (ThemeService).
+   ========================================================================= */
+:root {
+  --c-bg: #f6f1ea;
+  --c-card: #ffffff;
+  --c-panel: #f7f3ee;
+  --c-line: #ebe3d9;
+  --c-line-strong: #d9cfc3;
+  --c-text: #1d1a17;
+  --c-text-2: #6b625a;
+  --c-text-3: #9c938a;
+  --c-brand: #cf3232;
+  --c-brand-strong: #b52b2b;
+  --c-brand-ink: #a92828;
+  --c-brand-soft: #fbeceb;
+  --c-brand-soft-2: rgba(207, 50, 50, 0.16);
+  --c-brand-gradient: linear-gradient(135deg, #e04646 0%, #cf3232 55%, #b52b2b 100%);
+  --c-success: #157347;
+  --c-success-soft: #e8f6ee;
+  --c-shadow: 0 1px 2px rgba(29, 26, 23, 0.04), 0 14px 36px -16px rgba(29, 26, 23, 0.18);
+  --c-shadow-brand: 0 12px 24px -12px rgba(207, 50, 50, 0.6);
+}
+
+html.app-dark {
+  --c-bg: #100e0d;
+  --c-card: #1a1716;
+  --c-panel: #221f1d;
+  --c-line: #2e2a27;
+  --c-line-strong: #403a36;
+  --c-text: #f5f1ed;
+  --c-text-2: #b8afa7;
+  --c-text-3: #8a817a;
+  --c-brand: #e5484d;
+  --c-brand-strong: #f06266;
+  --c-brand-ink: #ff8d8f;
+  --c-brand-soft: rgba(229, 72, 77, 0.12);
+  --c-brand-soft-2: rgba(229, 72, 77, 0.22);
+  --c-success: #6ee7a0;
+  --c-success-soft: rgba(34, 197, 94, 0.14);
+  --c-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 36px -16px rgba(0, 0, 0, 0.7);
+  --c-shadow-brand: 0 12px 26px -12px rgba(229, 72, 77, 0.55);
+}
+
+.ca-head {
+  margin-bottom: 26px;
+}
+
+.ca-head h1 {
+  margin: 0 0 8px;
+  font-size: clamp(26px, 3vw, 32px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--c-text);
+}
+
+.ca-head p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--c-text-2);
+}
+
+.ca-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ca-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 520px) {
+  .ca-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ca-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.ca-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ca-field label,
+.ca-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.ca-hint {
+  font-size: 12.5px;
+  color: var(--c-text-3);
+}
+
+/* input with a leading icon and an optional trailing button */
+.ca-control {
+  position: relative;
+  display: block;
+}
+
+.ca-control > svg.ca-ico {
+  position: absolute;
+  inset-inline-start: 15px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  color: var(--c-text-3);
+  pointer-events: none;
+  transition: color 0.15s ease;
+}
+
+.ca-control:focus-within > svg.ca-ico {
+  color: var(--c-brand);
+}
+
+.ca-control input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 52px;
+  padding: 0 14px;
+  padding-inline-start: 46px;
+  border: 1px solid var(--c-line-strong);
+  border-radius: 14px;
+  background: var(--c-card);
+  color: var(--c-text);
+  font: inherit;
+  font-size: 15px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.25s ease;
+}
+
+.ca-control input::placeholder {
+  color: var(--c-text-3);
+}
+
+.ca-control input:hover {
+  border-color: var(--c-text-3);
+}
+
+.ca-control input:focus {
+  outline: none;
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 4px var(--c-brand-soft-2);
+}
+
+.ca-control.has-toggle input {
+  padding-inline-end: 50px;
+}
+
+.ca-control.invalid input {
+  border-color: var(--c-brand);
+}
+
+.ca-eye {
+  position: absolute;
+  inset-inline-end: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--c-text-3);
+  cursor: pointer;
+}
+
+.ca-eye:hover {
+  color: var(--c-text);
+  background: var(--c-panel);
+}
+
+.ca-eye svg {
+  width: 19px;
+  height: 19px;
+}
+
+.ca-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 13px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ca-alert svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+.ca-alert.danger {
+  background: var(--c-brand-soft);
+  color: var(--c-brand-ink);
+  box-shadow: inset 0 0 0 1px var(--c-brand-soft-2);
+}
+
+.ca-alert.success {
+  background: var(--c-success-soft);
+  color: var(--c-success);
+}
+
+.ca-submit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 54px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--c-brand-gradient);
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--c-shadow-brand);
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ca-submit:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.ca-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ca-submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.ca-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ca-spin 0.7s linear infinite;
+}
+
+@keyframes ca-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ca-link {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: var(--c-brand);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ca-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ca-link.small {
+  font-size: 13px;
+}
+
+.ca-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 18px;
+  font-size: 12.5px;
+  color: var(--c-text-3);
+}
+
+.ca-divider::before,
+.ca-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--c-line);
+}
+
+.ca-alt {
+  margin: 0;
+  text-align: center;
+  font-size: 14.5px;
+  color: var(--c-text-2);
+}
+
+.ca-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 52px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  border: 1.5px solid var(--c-line-strong);
+  background: transparent;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.ca-ghost:hover {
+  border-color: var(--c-brand);
+  color: var(--c-brand);
+  background: var(--c-brand-soft);
+}
+
+.ca-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--c-text-2);
+  cursor: pointer;
+}
+
+.ca-check input {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--c-brand);
+  cursor: pointer;
+}
+
+.ca-check a {
+  color: var(--c-brand);
+  font-weight: 600;
+}
+
+.ca-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-2);
+  text-decoration: none;
+}
+
+.ca-back:hover {
+  color: var(--c-text);
+}
+
+.ca-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+[dir="rtl"] .ca-back svg {
+  transform: scaleX(-1);
+}
+
+.ca-badge {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 18px;
+  border-radius: 16px;
+  color: var(--c-brand);
+  background: var(--c-brand-soft);
+  box-shadow: inset 0 0 0 1px var(--c-brand-soft-2);
+}
+
+.ca-badge svg {
+  width: 24px;
+  height: 24px;
+}
+
+.ca-badge.filled {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--c-brand-gradient);
+  box-shadow: var(--c-shadow-brand), 0 0 0 10px var(--c-brand-soft);
+  animation: ca-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.ca-badge.filled svg {
+  width: 32px;
+  height: 32px;
+}
+
+@keyframes ca-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-badge.filled,
+  .ca-spinner {
+    animation: none;
+  }
+}
+
+/* =========================================================================
+   Site-wide light / dark tokens. Light values are the site's existing colours (unchanged look);
+   dark values apply with `app-dark` on <html> (ThemeService, switch in the header).
+   ========================================================================= */
+:root {
+  --s-page: #f3ebe2;
+  --s-card: #ffffff;
+  --s-glass: rgba(255, 255, 255, 0.94);
+  --s-glass-strong: rgba(255, 255, 255, 0.96);
+  --s-soft: #eceaea;
+  --s-soft-2: #f4f4f2;
+  --s-tint: #f8f6f6;
+  --s-field: #f2f1f1;
+  --s-ink: #141414;
+  --s-ink-2: #5e5e5e;
+  --s-ink-3: #8a8a8a;
+  --s-line: #e8e4e4;
+  --s-line-soft: rgba(17, 17, 17, 0.08);
+  --s-footer: #f7f7f7;
+  --s-nav: #344054;
+  --s-success: #1f7a45;
+  --s-star-off: #d5d1d1;
+}
+
+html.app-dark {
+  --s-page: #100e0d;
+  --s-card: #1a1716;
+  --s-glass: rgba(22, 19, 18, 0.88);
+  --s-glass-strong: rgba(22, 19, 18, 0.94);
+  --s-soft: #2a2624;
+  --s-soft-2: #242120;
+  --s-tint: #1f1c1a;
+  --s-field: #242120;
+  --s-ink: #f5f1ed;
+  --s-ink-2: #b8afa7;
+  --s-ink-3: #8a817a;
+  --s-line: #2e2a27;
+  --s-line-soft: rgba(255, 255, 255, 0.08);
+  --s-footer: #141211;
+  --s-nav: #cfc7c0;
+  --s-success: #6ee7a0;
+  --s-star-off: #4a4440;
+}
+
+body {
+  background: var(--s-page);
+  color: var(--s-ink);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Same logo, light "RE" letters in dark mode (only hides; components keep their display) */
+html:not(.app-dark) .logo-on-dark,
+html.app-dark .logo-on-light {
+  display: none !important;
+}
+
+html.app-dark ::selection {
+  background: rgba(229, 72, 77, 0.35);
+}
+
+html.app-dark input,
+html.app-dark select,
+html.app-dark textarea {
+  color-scheme: dark;
 }

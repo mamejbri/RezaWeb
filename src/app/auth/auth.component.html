@@ -1,37 +1,56 @@
-<main class="auth-page">
-  <section class="auth-panel">
-    <h1>{{ 'auth.title' | t }}</h1>
+<app-auth-shell>
+  <header class="ca-head">
+    <h1>{{ 'authUi.loginTitle' | t }}</h1>
+    <p>{{ 'authUi.loginCopy' | t }}</p>
+  </header>
 
-    <form class="auth-form" (ngSubmit)="login()">
-      <label class="auth-field">
-        <input type="email" name="email" [(ngModel)]="email" [placeholder]="'auth.email' | t" autocomplete="email" />
-      </label>
+  <form class="ca-form" (ngSubmit)="login()" novalidate>
+    @if (errorMessage) {
+    <p class="ca-alert danger" role="alert">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span>{{ errorMessage }}</span>
+    </p>
+    }
 
-      <label class="auth-field">
-        <input type="password" name="password" [(ngModel)]="password" [placeholder]="'auth.password' | t"
-          autocomplete="current-password" />
-      </label>
+    <div class="ca-field">
+      <label for="login-email">{{ 'auth.email' | t }}</label>
+      <span class="ca-control" [class.invalid]="tried && !email.trim()">
+        <svg class="ca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        <input id="login-email" type="email" name="email" [(ngModel)]="email" placeholder="vous@exemple.com"
+          autocomplete="email" inputmode="email" />
+      </span>
+    </div>
 
-      <a class="auth-link" routerLink="/forgot-password">{{ 'auth.forgot' | t }}</a>
+    <div class="ca-field">
+      <div class="ca-label-row">
+        <label for="login-password">{{ 'auth.password' | t }}</label>
+        <a class="ca-link small" routerLink="/forgot-password">{{ 'auth.forgot' | t }}</a>
+      </div>
+      <span class="ca-control has-toggle" [class.invalid]="tried && !password.trim()">
+        <svg class="ca-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <input id="login-password" [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="password"
+          placeholder="••••••••" autocomplete="current-password" />
+        <button type="button" class="ca-eye" (click)="showPassword = !showPassword"
+          [attr.aria-label]="(showPassword ? 'auth.hidePassword' : 'auth.showPassword') | t">
+          @if (showPassword) {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+          } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          }
+        </button>
+      </span>
+    </div>
 
-      @if (errorMessage) {
-      <p class="auth-error">{{ errorMessage }}</p>
+    <button class="ca-submit" type="submit" [disabled]="loading">
+      @if (loading) {
+      <span class="ca-spinner" aria-hidden="true"></span>
       }
+      {{ (loading ? 'auth.loggingIn' : 'auth.login') | t }}
+    </button>
+  </form>
 
-      <button class="auth-button" type="submit" [disabled]="loading">
-        {{ (loading ? 'auth.loggingIn' : 'auth.login') | t }}
-      </button>
-    </form>
+  <div class="ca-divider">{{ 'common.or' | t }}</div>
 
-    <div class="auth-divider" aria-hidden="true">
-      <span></span>
-      <strong>{{ 'common.or' | t }}</strong>
-      <span></span>
-    </div>
-
-    <div class="auth-signup">
-      <p>{{ 'auth.newOnReza' | t }}</p>
-      <a class="auth-signup__button" routerLink="/register">{{ 'auth.createAccount' | t }}</a>
-    </div>
-  </section>
-</main>
+  <p class="ca-alt">{{ 'auth.newOnReza' | t }}</p>
+  <a class="ca-ghost signup" routerLink="/register">{{ 'auth.createAccount' | t }}</a>
+</app-auth-shell>

@@ -22,8 +22,8 @@ import { TranslatePipe } from '../../i18n/translate.pipe';
       justify-content: center;
       min-height: 72px;
       padding: 18px 20px;
-      background: #f7f7f7;
-      color: #101828;
+      background: var(--s-footer);
+      color: var(--s-ink);
     }
 
     .site-footer__note {

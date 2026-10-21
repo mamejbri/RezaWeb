@@ -25,7 +25,7 @@ input {
 .profile-page {
   min-height: 100vh;
   padding: 0 18px 36px;
-  background: #ffffff;
+  background: var(--s-card);
   color: var(--reza-text);
 }
 
@@ -41,7 +41,7 @@ input {
   margin: 0 auto;
   padding: 18px 28px;
   border-radius: 24px;
-  background: linear-gradient(180deg, #f9f8f8 0%, #f8f6f6 100%);
+  background: linear-gradient(180deg, var(--s-tint) 0%, var(--s-tint) 100%);
   box-shadow: 0 12px 30px rgba(17, 17, 17, 0.06);
 }
 
@@ -84,7 +84,7 @@ input {
 }
 
 .profile-avatar--image {
-  background-color: #e9e5e5;
+  background-color: var(--s-soft);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -113,7 +113,7 @@ input {
 
 .profile-topbar__pro {
   border: 1px solid var(--reza-red);
-  background: #ffffff;
+  background: var(--s-card);
   color: var(--reza-red);
 }
 
@@ -152,7 +152,7 @@ input {
   margin-top: 16px;
   border: 0;
   border-radius: 12px;
-  background: #eceaea;
+  background: var(--s-soft);
   color: var(--reza-text);
   font: inherit;
   font-size: 1rem;
@@ -244,7 +244,7 @@ input {
 }
 
 .profile-status--success {
-  color: #1f7a45;
+  color: var(--s-success);
 }
 
 .profile-panel__edit {
@@ -313,8 +313,8 @@ input {
 
 .profile-field__input--locked {
   cursor: default;
-  background: #eceaea;
-  color: #5b5b5b;
+  background: var(--s-soft);
+  color: var(--s-ink-2);
 }
 
 .profile-field__input--locked:focus {
@@ -349,7 +349,7 @@ input {
 .profile-secondary-button {
   min-width: 140px;
   padding: 0 24px;
-  background: #eceaea;
+  background: var(--s-soft);
   color: var(--reza-text);
 }
 
@@ -414,4 +414,12 @@ input {
     width: 100%;
     min-width: 0;
   }
+}
+
+/* Dark mode (html.app-dark, switch in the header) */
+:host-context(html.app-dark) {
+  --reza-red: var(--c-brand);
+  --reza-red-soft: var(--s-tint);
+  --reza-text: var(--s-ink);
+  --reza-field: var(--s-field);
 }

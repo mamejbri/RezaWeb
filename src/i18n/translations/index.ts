@@ -6,6 +6,7 @@ import { es } from './es';
 import { fr } from './fr';
 import { hi } from './hi';
 import { id } from './id';
+import { it } from './it';
 import { ja } from './ja';
 import { pt } from './pt';
 import { ru } from './ru';
@@ -17,4 +18,4 @@ type DeepStrings<T> = { [K in keyof T]: T[K] extends string ? string : DeepStrin
 /** French is the reference: every other language must have exactly the same keys (checked at compile time). */
 export type Translations = DeepStrings<typeof fr>;
 
-export const TRANSLATIONS: Record<Lang, Translations> = { fr, en, ar, es, pt, de, tr, id, zh, ja, hi, ru };
+export const TRANSLATIONS: Record<Lang, Translations> = { fr, en, ar, es, pt, de, tr, id, zh, ja, hi, ru, it };

@@ -13,6 +13,7 @@ import localeZhHans from '@angular/common/locales/zh-Hans';
 import localeJa from '@angular/common/locales/ja';
 import localeHi from '@angular/common/locales/hi';
 import localeRu from '@angular/common/locales/ru';
+import localeIt from '@angular/common/locales/it';
 
 import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
@@ -30,6 +31,7 @@ registerLocaleData(localeZhHans);
 registerLocaleData(localeJa);
 registerLocaleData(localeHi);
 registerLocaleData(localeRu);
+registerLocaleData(localeIt);
 
 export const appConfig: ApplicationConfig = {
   providers: [

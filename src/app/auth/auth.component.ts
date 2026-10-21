@@ -1,17 +1,17 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../services/auth.service';
 import { ClientSessionService } from '../../services/client-session.service';
 
 import { LanguageService } from '../../i18n/language.service';
-import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { AuthShellComponent } from '../auth-shell/auth-shell.component';
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive, TranslatePipe, LocaleSwitcherComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AuthShellComponent],
   templateUrl: './auth.component.html',
   styleUrl: './auth.component.css'
 })
@@ -26,6 +26,9 @@ export class AuthComponent {
   password = '';
   loading = false;
   errorMessage = '';
+  showPassword = false;
+  /** submit was attempted: empty fields get flagged */
+  tried = false;
 
   get isAuthenticated(): boolean {
     return this.clientSessionService.isAuthenticated();
@@ -36,7 +39,10 @@ export class AuthComponent {
   }
 
   login(): void {
-    if (!this.email.trim() || !this.password.trim() || this.loading) {
+    if (this.loading) return;
+    this.tried = true;
+    if (!this.email.trim() || !this.password.trim()) {
+      this.errorMessage = this.i18n.t('authUi.fillAll');
       return;
     }
 
