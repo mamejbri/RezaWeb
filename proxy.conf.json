@@ -1,7 +1,7 @@
 {
   "/api/reza": {
-    "target": "http://localhost:8080",
-    "secure": false,
+    "target": "https://dev.booktareza.com",
+    "secure": true,
     "changeOrigin": true
   }
 }

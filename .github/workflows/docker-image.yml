@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - main
+      - dev # builds ghcr.io/mamejbri/reza_web_client:dev for the dev VM
     tags:
       - 'v*'
   pull_request:
