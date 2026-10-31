@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, inject, ViewChild, ElementRef, PLATFORM_ID } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { catchError, concatMap, from, of, toArray } from 'rxjs';
+import { catchError, of } from 'rxjs';
 
 import { AvailabilityService, PrestationAvailabilityResponse, RestaurantAvailabilityResponse } from '../../services/availability.service';
 import { AvisListItem, AvisService, ReviewSummary } from '../../services/avis.service';
@@ -88,13 +88,22 @@ export class ReservationComponent implements OnInit {
 
   /**
    * Panier (SPA only): prestations added to the cart for a single visit. The first item locks
-   * `panierDate`/`panierTime` as the shared visit start; later items reuse it — the backend books
-   * them back-to-back with one collaborator, so only one time is ever picked per visit.
+   * `panierDate`/`panierTime` as the shared visit start; each later item is checked to follow the
+   * others at that time, and the whole panier is booked as one reservation, each prestation by
+   * someone qualified for it.
    */
   panierItems: Prestation[] = [];
   panierDate = '';
   panierTime = '';
   showPanierDrawer = false;
+
+  /** Practitioner asked for the prestation being configured (null: no preference). */
+  selectedCollaborateurId: number | null = null;
+  /** Practitioner asked for each panier item. */
+  panierPins: Record<number, number | null> = {};
+  /** Whether the prestation being configured can follow the panier at its time (checked with the server). */
+  panierFitChecking = false;
+  panierFitOk = false;
   private pendingConfirmKind: 'reservation' | 'panier' = 'reservation';
 
   /** First selected prestation — the reference used for availability/slot fetching and single-select flows. */
@@ -112,6 +121,30 @@ export class ReservationComponent implements OnInit {
 
   get panierTotalDurationMinutes(): number {
     return this.panierItems.reduce((sum, p) => sum + (p.durationMinutes ?? 0), 0);
+  }
+
+  /** Lowest price of a prestation (its fixed price, or the bottom of its range); null on quote. */
+  priceOf(p: Prestation): number | null {
+    return p.prixFixe ?? p.prixMin ?? null;
+  }
+
+  get panierTotalPrice(): number {
+    return this.panierItems.reduce((sum, p) => sum + (this.priceOf(p) ?? 0), 0);
+  }
+
+  /** "à partir de" when a price is a range or on quote. */
+  get panierTotalIsFrom(): boolean {
+    return this.panierItems.some((p) => p.prixFixe == null);
+  }
+
+  /** Shown greyed and not selectable: "Affichée mais non réservable" (it used to vanish). */
+  isBookable(prestation: Prestation): boolean {
+    return prestation.validated && !prestation.showAsUnavailable;
+  }
+
+  practitionerName(prestation: Prestation): string {
+    const id = this.panierPins[prestation.id];
+    return id == null ? '' : (prestation.collaborateurOptions ?? []).find((c) => c.id === id)?.label ?? '';
   }
 
   get panierDateLabel(): string {
@@ -147,7 +180,7 @@ export class ReservationComponent implements OnInit {
       return !!this.selectedTime && this.isSlotBookable(this.selectedTime);
     }
 
-    return true;
+    return this.panierFitOk && !this.panierFitChecking;
   }
 
   get activityRessourceType(): RessourceType | null {
@@ -477,26 +510,73 @@ export class ReservationComponent implements OnInit {
 
   /** Selects/deselects the prestation currently being configured (click again to deselect). */
   selectPrestation(prestation: Prestation): void {
+    if (!this.isBookable(prestation)) {
+      return;
+    }
     const alreadySelected = this.selectedPrestation?.id === prestation.id;
     this.selectedPrestations = alreadySelected ? [] : [prestation];
+    this.selectedCollaborateurId = null;
     this.selectedTime = '';
     this.selectedActivityQuantity = 1;
     this.reservationError = '';
 
     if (this.selectedPrestations.length === 0) {
       this.prestationSlots = [];
+      this.panierFitOk = false;
       this.availabilityMessage = this.i18n.t('booking.selectPrestationForSlots');
       return;
     }
 
     if (this.isSpa && this.panierItems.length > 0) {
-      // Visit time is already locked by the first panier item — nothing to fetch.
+      // The visit time is locked by the panier: check this prestation can follow it then.
       this.prestationSlots = [];
       this.availabilityMessage = '';
+      this.checkPanierFit();
       return;
     }
 
     this.loadPrestationAvailability();
+  }
+
+  /** The practitioner asked for changes which times are free. */
+  onPractitionerChange(collaborateurId: number | null): void {
+    this.selectedCollaborateurId = collaborateurId;
+    this.selectedTime = '';
+    this.reservationError = '';
+    if (this.isSpa && this.panierItems.length > 0) {
+      this.checkPanierFit();
+    } else {
+      this.loadPrestationAvailability();
+    }
+  }
+
+  /**
+   * Whether the panier plus the prestation being configured fits at the visit time, every
+   * prestation by someone qualified and free for it (only the first one used to be checked).
+   */
+  private checkPanierFit(): void {
+    const prestation = this.selectedPrestation;
+    this.panierFitOk = false;
+    if (!prestation || !this.etablissement?.id || !this.panierDate || !this.panierTime) {
+      return;
+    }
+
+    const ids = [...this.panierItems.map((p) => p.id), prestation.id];
+    const pins = { ...this.panierPins, [prestation.id]: this.selectedCollaborateurId };
+    this.panierFitChecking = true;
+    this.availabilityService
+      .getPanierAvailability(this.etablissement.id, ids, this.panierDate, pins)
+      .pipe(catchError(() => of(null)))
+      .subscribe((response) => {
+        if (this.selectedPrestation?.id !== prestation.id) {
+          return;
+        }
+        this.panierFitChecking = false;
+        this.panierFitOk = !!response && response.slots.includes(this.panierTime);
+        this.reservationError = this.panierFitOk
+          ? ''
+          : this.i18n.t(response ? 'booking.cannotChain' : 'booking.availabilityError', { time: this.panierTime });
+      });
   }
 
   /** Adds the currently configured prestation to the panier. The first item locks the visit's date/time; later items reuse it. */
@@ -512,7 +592,10 @@ export class ReservationComponent implements OnInit {
     }
 
     this.panierItems = [...this.panierItems, prestation];
+    this.panierPins = { ...this.panierPins, [prestation.id]: this.selectedCollaborateurId };
     this.selectedPrestations = [];
+    this.selectedCollaborateurId = null;
+    this.panierFitOk = false;
     this.selectedTime = '';
     this.prestationSlots = [];
     this.reservationError = '';
@@ -521,6 +604,8 @@ export class ReservationComponent implements OnInit {
   /** Removes an item from the panier. If it was the last one, the visit's date/time unlock again. */
   removeFromPanier(prestation: Prestation): void {
     this.panierItems = this.panierItems.filter((p) => p.id !== prestation.id);
+    const { [prestation.id]: _removed, ...pins } = this.panierPins;
+    this.panierPins = pins;
 
     if (this.panierItems.length === 0) {
       this.selectedDate = this.panierDate || this.selectedDate;
@@ -532,9 +617,11 @@ export class ReservationComponent implements OnInit {
 
   /** Pulls a panier item back out for editing: re-selects it in the list, reopening time picking if it was the last item. */
   editPanierItem(prestation: Prestation): void {
+    const pin = this.panierPins[prestation.id] ?? null;
     this.removeFromPanier(prestation);
     this.showPanierDrawer = false;
     this.selectedPrestations = [prestation];
+    this.selectedCollaborateurId = pin;
     this.selectedActivityQuantity = 1;
     this.selectedTime = '';
     this.reservationError = '';
@@ -551,6 +638,7 @@ export class ReservationComponent implements OnInit {
       this.loadPrestationAvailability();
     } else {
       this.prestationSlots = [];
+      this.checkPanierFit();
     }
   }
 
@@ -625,6 +713,9 @@ export class ReservationComponent implements OnInit {
     } else {
       payload.prestationId = this.selectedPrestation!.id;
       payload.partySize = this.selectedActivityQuantity;
+      if (this.selectedCollaborateurId != null) {
+        payload.collaborateurByPrestation = { [this.selectedPrestation!.id]: this.selectedCollaborateurId };
+      }
     }
 
     this.submitReservation(
@@ -636,7 +727,10 @@ export class ReservationComponent implements OnInit {
     );
   }
 
-  /** Books each panier item as a separate reservation with sequential start times. */
+  /**
+   * Books the whole panier as one reservation, in the order chosen: the server gives each
+   * prestation (each step of a pack) to someone qualified and checks they are all free.
+   */
   confirmPanier(): void {
     this.reservationError = '';
 
@@ -649,32 +743,28 @@ export class ReservationComponent implements OnInit {
       return;
     }
 
-    const clientId = this.clientSessionService.profile()!.id!;
-    const etablissementId = this.etablissement!.id;
-
-    let currentTime = this.panierTime;
-    const payloads: CreateReservationPayload[] = this.panierItems.map((item) => {
-      const payload: CreateReservationPayload = {
-        clientId,
-        etablissementId,
-        date: this.panierDate,
-        time: currentTime,
-        partySize: 1,
-        prestationId: item.id,
-      };
-      if (item.durationMinutes) {
-        currentTime = this.addMinutesToTime(currentTime, item.durationMinutes);
+    const collaborateurByPrestation: Record<number, number> = {};
+    for (const item of this.panierItems) {
+      const pin = this.panierPins[item.id];
+      if (pin != null) {
+        collaborateurByPrestation[item.id] = pin;
       }
-      return payload;
-    });
+    }
+
+    const payload: CreateReservationPayload = {
+      clientId: this.clientSessionService.profile()!.id!,
+      etablissementId: this.etablissement!.id,
+      date: this.panierDate,
+      time: this.panierTime,
+      partySize: 1,
+      prestationIds: this.panierItems.map((item) => item.id),
+      collaborateurByPrestation
+    };
 
     this.reservationLoading = true;
     this.showPanierDrawer = false;
 
-    from(payloads).pipe(
-      concatMap(payload => this.reservationService.createFlex(payload)),
-      toArray()
-    ).subscribe({
+    this.reservationService.createFlex(payload).subscribe({
       next: () => {
         this.reservationLoading = false;
         this.confirmationMessage = this.i18n.t('booking.approved');
@@ -692,14 +782,6 @@ export class ReservationComponent implements OnInit {
         this.reservationError = this.getReservationErrorMessage(error?.error?.message);
       }
     });
-  }
-
-  private addMinutesToTime(hhmm: string, minutes: number): string {
-    const [h, m] = hhmm.slice(0, 5).split(':').map(Number);
-    const total = h * 60 + m + minutes;
-    const rh = Math.floor(total / 60) % 24;
-    const rm = total % 60;
-    return `${String(rh).padStart(2, '0')}:${String(rm).padStart(2, '0')}`;
   }
 
   /** Auth/profile/etablissement checks shared by both confirm flows. Remembers which flow to resume after the profile popup. */
@@ -815,6 +897,8 @@ export class ReservationComponent implements OnInit {
     this.selectedPeople = 2;
     this.selectedTime = '';
     this.selectedPrestations = [];
+    this.selectedCollaborateurId = null;
+    this.panierFitOk = false;
     this.selectedActivityQuantity = 1;
     this.expandedCategoryId = null;
     this.prestationSlots = [];
@@ -829,6 +913,7 @@ export class ReservationComponent implements OnInit {
   /** Wipes the panier and the booking form after a successful multi-prestation confirmation. */
   private resetPanierForm(): void {
     this.panierItems = [];
+    this.panierPins = {};
     this.panierDate = '';
     this.panierTime = '';
     this.showPanierDrawer = false;
@@ -883,7 +968,8 @@ export class ReservationComponent implements OnInit {
       next: (prestations) => {
         this.prestationsByCat = {
           ...this.prestationsByCat,
-          [categoryId]: prestations.filter(p => p.visible && p.validated && !p.showAsUnavailable && !p.hidden)
+          // "Affichée mais non réservable" stays in the list, greyed (see isBookable)
+          [categoryId]: prestations.filter(p => p.visible && !p.hidden)
         };
         this.loadingCategoryId = null;
       },
@@ -986,13 +1072,18 @@ export class ReservationComponent implements OnInit {
     this.availabilityMessage = '';
     this.prestationSlots = [];
 
-    this.availabilityService
-      .getPrestationAvailability(
-        this.etablissement.id,
-        this.selectedPrestation.id,
-        this.selectedDate,
-        this.selectedActivityQuantity
-      )
+    // with a practitioner asked for, only her free times
+    const request = this.selectedCollaborateurId != null
+      ? this.availabilityService.getPanierAvailability(this.etablissement.id, [this.selectedPrestation.id],
+          this.selectedDate, { [this.selectedPrestation.id]: this.selectedCollaborateurId })
+      : this.availabilityService.getPrestationAvailability(
+          this.etablissement.id,
+          this.selectedPrestation.id,
+          this.selectedDate,
+          this.selectedActivityQuantity
+        );
+
+    request
       .pipe(
         catchError(() => {
           this.slotsLoading = false;

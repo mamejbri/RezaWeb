@@ -107,13 +107,21 @@
                   @for (prestation of prestationsByCat[cat.id]; track prestation.id) {
                   <button class="booking-prestations__item"
                     [class.booking-prestations__item--active]="isPrestationSelected(prestation)"
-                    [class.booking-prestations__item--panier]="isSpa" type="button"
+                    [class.booking-prestations__item--panier]="isSpa"
+                    [class.booking-prestations__item--unavailable]="!isBookable(prestation)"
+                    [disabled]="!isBookable(prestation)"
+                    [attr.aria-pressed]="isPrestationSelected(prestation) || isInPanier(prestation)" type="button"
                     (click)="selectPrestation(prestation)">
                     @if (isSpa) {
-                    <span class="booking-prestations__check" [class.booking-prestations__check--on]="isInPanier(prestation)"
+                    <!-- ticked when in the panier and while being chosen (the 2nd one had a pink background only) -->
+                    <span class="booking-prestations__check"
+                      [class.booking-prestations__check--on]="isInPanier(prestation) || isPrestationSelected(prestation)"
                       aria-hidden="true">✓</span>
                     }
                     <div class="booking-prestations__name">{{ prestation.nom }}</div>
+                    @if (!isBookable(prestation)) {
+                    <div class="booking-prestations__unavailable">{{ 'booking.notBookableOnline' | t }}</div>
+                    }
                     @if (prestation.description) {
                     <div class="booking-prestations__description">{{ prestation.description }}</div>
                     }
@@ -137,6 +145,19 @@
               }
             </div>
             }
+          </div>
+          }
+
+          @if ((selectedPrestation?.collaborateurOptions ?? []).length > 0) {
+          <div class="booking-row booking-row--counter">
+            <label for="booking-practitioner"><strong>{{ 'booking.practitioner' | t }}</strong></label>
+            <select id="booking-practitioner" class="booking-practitioner" [ngModel]="selectedCollaborateurId"
+              (ngModelChange)="onPractitionerChange($event)">
+              <option [ngValue]="null">{{ 'booking.anyPractitioner' | t }}</option>
+              @for (c of selectedPrestation?.collaborateurOptions ?? []; track c.id) {
+              <option [ngValue]="c.id">{{ c.label }}</option>
+              }
+            </select>
           </div>
           }
 
@@ -212,6 +233,9 @@
           <span class="booking-visit-locked__icon" aria-hidden="true">🕒</span>
           {{ 'booking.visitAt' | t: { date: panierDateLabel, time: panierTime } }}
         </div>
+        @if (panierFitChecking) {
+        <p class="booking-message">{{ 'booking.loadingSlots' | t }}</p>
+        }
         }
 
         @if (reservationError) {
@@ -387,6 +411,18 @@
             @if (item.durationMinutes) {
             <span class="panier-drawer__item-duration">{{ 'common.minutes' | t: { n: item.durationMinutes } }}</span>
             }
+            <span class="panier-drawer__item-duration">
+              @if (item.prixFixe) {
+              {{ item.prixFixe | money }}
+              } @else if (item.prixMin && item.prixMax) {
+              {{ 'booking.priceRange' | t: { min: (item.prixMin | money), max: (item.prixMax | money) } }}
+              } @else {
+              {{ 'booking.onQuote' | t }}
+              }
+              @if (practitionerName(item)) {
+              · {{ 'booking.withPractitioner' | t: { name: practitionerName(item) } }}
+              }
+            </span>
           </div>
           <div class="panier-drawer__item-actions">
             <button type="button" class="panier-drawer__action" (click)="editPanierItem(item)"
@@ -399,6 +435,9 @@
       </ul>
 
       <div class="panier-drawer__total">{{ 'booking.totalDuration' | t: { n: panierTotalDurationMinutes } }}</div>
+      <div class="panier-drawer__total">
+        {{ (panierTotalIsFrom ? 'booking.cartTotalFrom' : 'booking.cartTotal') | t: { amount: (panierTotalPrice | money) } }}
+      </div>
 
       @if (reservationError) {
       <p class="booking-message booking-message--error">{{ reservationError }}</p>

@@ -15,6 +15,10 @@ export type EtablissementCard = {
   slug: string;
   address: string;
   city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  /** Only set when the search was made with the client's position. */
+  distanceKm: number | null;
   rating: number;
   reviewCount: number;
   imageUrl: string | null;
@@ -74,6 +78,10 @@ export type Prestation = {
   showAsUnavailable: boolean;
   hidden: boolean;
   ressourceSummaries?: RessourceSummary[] | null;
+  /** Who the client may ask for (first names), when the prestation needs someone. */
+  collaborateurOptions?: { id: number; label: string }[] | null;
+  /** A pack: its steps (done one after the other). */
+  etapeIds?: number[] | null;
 };
 
 export type EtablissementDetail = {
@@ -82,6 +90,9 @@ export type EtablissementDetail = {
   slug?: string | null;
   address?: string | null;
   city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  distanceKm?: number | null;
   description?: string | null;
   imageUrl?: string | null;
   photoPaths?: string[] | null;
@@ -115,6 +126,8 @@ type EtablissementSearchRequest = {
   minPrice: number | null;
   maxPrice: number | null;
   type: BusinessType;
+  lat: number | null;
+  lng: number | null;
 };
 
 export type EtablissementSearchFilters = Partial<
@@ -130,6 +143,8 @@ export type EtablissementSearchFilters = Partial<
     | 'gammeProduit'
     | 'activite'
     | 'environnement'
+    | 'lat'
+    | 'lng'
   >
 >;
 
@@ -246,7 +261,9 @@ export class EtablissementsService {
       environnement: filters.environnement ?? [],
       minPrice: null,
       maxPrice: null,
-      type: this.mapSearchTypeToBusinessType(type)
+      type: this.mapSearchTypeToBusinessType(type),
+      lat: filters.lat ?? null,
+      lng: filters.lng ?? null
     };
   }
 
@@ -268,6 +285,9 @@ export class EtablissementsService {
       slug: item.slug ?? '',
       address: item.address?.trim() || this.i18n.t('results.addressMissing'),
       city: item.city?.trim() || null,
+      latitude: item.latitude ?? null,
+      longitude: item.longitude ?? null,
+      distanceKm: item.distanceKm ?? null,
       rating: item.averageRating ?? 0,
       reviewCount: item.reviewCount ?? 0,
       imageUrl: this.resolveImageUrl(item) ?? 'assets/images/default_image.jpg'

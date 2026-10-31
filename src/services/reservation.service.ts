@@ -13,6 +13,8 @@ export type CreateReservationPayload = {
   prestationId?: number;
   /** Panier (multi-prestation selection) — SPA establishments only. */
   prestationIds?: number[];
+  /** Practitioner asked for a prestation of the panier: prestation id -> collaborateur id. */
+  collaborateurByPrestation?: Record<number, number>;
   note?: string;
 };
 

@@ -59,4 +59,29 @@ export class AvailabilityService {
       { params }
     );
   }
+
+  /**
+   * Start times for a whole panier: its prestations one after the other (a pack as its steps),
+   * each by someone qualified and free for it. Only the first prestation used to be checked.
+   */
+  getPanierAvailability(
+    etablissementId: number,
+    prestationIds: number[],
+    date: string,
+    collaborateurByPrestation: Record<number, number | null> = {}
+  ): Observable<PrestationAvailabilityResponse> {
+    const params: Record<string, string> = {
+      etablissementId: etablissementId.toString(),
+      prestationIds: prestationIds.join(','),
+      date
+    };
+    const pins = Object.entries(collaborateurByPrestation)
+      .filter(([, c]) => c != null)
+      .map(([p, c]) => `${p}:${c}`);
+    if (pins.length) {
+      params['collaborateurs'] = pins.join(',');
+    }
+
+    return this.http.get<PrestationAvailabilityResponse>(`${API_BASE_URL}/availability/panier/slots`, { params });
+  }
 }

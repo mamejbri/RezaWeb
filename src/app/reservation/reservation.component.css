@@ -495,6 +495,30 @@ button {
   padding-inline-end: 44px;
 }
 
+/* "Affichée mais non réservable": shown, greyed, not selectable */
+.booking-prestations__item--unavailable,
+.booking-prestations__item--unavailable:hover {
+  border-color: var(--reza-surface);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.booking-prestations__unavailable {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.booking-practitioner {
+  min-width: 160px;
+  padding: 8px 10px;
+  border: 1px solid var(--s-line);
+  border-radius: 8px;
+  background: var(--s-card);
+  color: var(--reza-text);
+  font: inherit;
+}
+
 .booking-prestations__check {
   position: absolute;
   top: 14px;
