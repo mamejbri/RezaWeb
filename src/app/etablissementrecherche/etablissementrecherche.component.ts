@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Subject, catchError, forkJoin, of, takeUntil } from 'rxjs';
 
 import { AvisService } from '../../services/avis.service';
@@ -14,11 +14,13 @@ import {
   RezaSearchType
 } from '../../services/etablissements.service';
 import { FilterGroup, FilterGroupDto, FilterOption, FilterService } from '../../services/filter.service';
+import { GeolocationService, LatLng } from '../../services/geolocation.service';
 import { SeoService } from '../../services/seo.service';
 
 import { LanguageService } from '../../i18n/language.service';
 import { LocaleSwitcherComponent } from '../../i18n/locale-switcher.component';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { ResultsMapComponent } from '../results-map/results-map.component';
 /** Translation keys. */
 const TYPE_LABELS: Record<RezaSearchType, string> = {
   restaurant: 'types.restaurants',
@@ -29,13 +31,15 @@ const TYPE_LABELS: Record<RezaSearchType, string> = {
 @Component({
   selector: 'app-etablissementrecherche',
   standalone: true,
-  imports: [FormsModule, RouterLink, RouterLinkActive, DecimalPipe, TranslatePipe, LocaleSwitcherComponent],
+  imports: [FormsModule, RouterLink, RouterLinkActive, DecimalPipe, TranslatePipe, LocaleSwitcherComponent, ResultsMapComponent],
   templateUrl: './etablissementrecherche.component.html',
   styleUrl: './etablissementrecherche.component.css'
 })
 export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly geolocation = inject(GeolocationService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly avisService = inject(AvisService);
   private readonly etablissementsService = inject(EtablissementsService);
@@ -56,6 +60,11 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   error = false;
   filterSearchText = '';
   sortByRating = false;
+  /** The client's position while "near me" is on; results are then sorted nearest first. */
+  origin: LatLng | null = null;
+  locating = false;
+  locationError = false;
+  showMap = false;
 
   get typeLabel(): string {
     return this.i18n.t(TYPE_LABELS[this.selectedType]);
@@ -68,6 +77,8 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
         this.selectedType = (params.get('type') as RezaSearchType | null) ?? 'restaurant';
         this.selectedCity = params.get('city') ?? '';
         this.selectedText = params.get('text') ?? '';
+        this.origin = this.parseOrigin(params.get('lat'), params.get('lng'));
+        this.showMap = this.showMap || !!this.origin;
         this.selectedFilters = {};
         this.activeFilterGroup = null;
         this.loadFilters();
@@ -128,6 +139,42 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     this.selectedFilters = {};
     this.search();
+  }
+
+  toggleNearMe(): void {
+    this.locationError = false;
+
+    if (this.origin) {
+      this.origin = null;
+      this.search();
+      return;
+    }
+
+    this.locating = true;
+    this.geolocation
+      .current()
+      .then((origin) => {
+        this.origin = origin;
+        // A city filter would hide what is actually around the client.
+        this.selectedCity = '';
+        this.showMap = true;
+        this.search();
+      })
+      .catch(() => (this.locationError = true))
+      .finally(() => (this.locating = false));
+  }
+
+  toggleMap(): void {
+    this.showMap = !this.showMap;
+  }
+
+  selectPlace(place: EtablissementCard): void {
+    this.rememberReservation(place.id);
+    void this.router.navigate(['/reservation', place.slug]);
+  }
+
+  get hasMappablePlaces(): boolean {
+    return this.etablissements.some((place) => place.latitude != null && place.longitude != null);
   }
 
   toggleRatingSort(): void {
@@ -258,8 +305,19 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
       pourQui: this.getSelectedIds('POUR_QUI'),
       gammeProduit: this.getSelectedIds('GAMME_PRODUIT'),
       activite: this.getSelectedIds('ACTIVITE'),
-      environnement: this.getSelectedIds('ENVIRONNEMENT')
+      environnement: this.getSelectedIds('ENVIRONNEMENT'),
+      lat: this.origin?.lat ?? null,
+      lng: this.origin?.lng ?? null
     };
+  }
+
+  private parseOrigin(lat: string | null, lng: string | null): LatLng | null {
+    const latitude = Number(lat);
+    const longitude = Number(lng);
+    if (lat === null || lng === null || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return null;
+    }
+    return { lat: latitude, lng: longitude };
   }
 
   private getSelectedIds(group: FilterGroup): number[] {

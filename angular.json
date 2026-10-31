@@ -27,9 +27,11 @@
               "src/sitemap.xml"
             ],
             "styles": [
+              "node_modules/leaflet/dist/leaflet.css",
               "src/styles.css"
             ],
             "scripts": [],
+            "allowedCommonJsDependencies": ["leaflet"],
             "server": "src/main.server.ts",
             "prerender": true,
             "ssr": {
@@ -94,6 +96,7 @@
               "src/assets"
             ],
             "styles": [
+              "node_modules/leaflet/dist/leaflet.css",
               "src/styles.css"
             ],
             "scripts": []

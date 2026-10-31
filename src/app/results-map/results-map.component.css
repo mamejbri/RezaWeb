@@ -1,0 +1,70 @@
+app-results-map {
+  display: block;
+  width: min(1600px, 100%);
+  margin: 16px auto 24px;
+}
+
+.results-map {
+  height: 420px;
+  border-radius: 20px;
+  overflow: hidden;
+  /* Keeps Leaflet's panes below the sticky site header and the filter drawer. */
+  z-index: 0;
+  isolation: isolate;
+}
+
+@media (max-width: 640px) {
+  .results-map {
+    height: 320px;
+    border-radius: 16px;
+  }
+}
+
+.results-map__pin > span {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border: 3px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  background: #cf3232;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  transform: rotate(-45deg);
+}
+
+.results-map__origin {
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 4px solid #ffffff;
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.25);
+}
+
+.results-map__popup {
+  display: grid;
+  gap: 4px;
+  min-width: 160px;
+  font-family: inherit;
+}
+
+.results-map__popup strong {
+  font-size: 0.95rem;
+}
+
+.results-map__popup span {
+  color: #5e5e5e;
+  font-size: 0.85rem;
+}
+
+.results-map__popup button {
+  justify-self: start;
+  margin-top: 6px;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: #cf3232;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

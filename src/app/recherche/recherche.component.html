@@ -34,10 +34,18 @@
     <p class="recherche-cities__status">{{ 'search.loadingCities' | t }}</p>
     } @else {
     <div class="recherche-cities__grid">
+      <button type="button" class="recherche-city-chip recherche-city-chip--near" [disabled]="locating"
+        (click)="searchNearMe()">
+        {{ (locating ? 'results.locating' : 'results.nearMe') | t }}
+      </button>
       @for (city of cities; track city) {
       <button type="button" class="recherche-city-chip" (click)="selectCity(city)">{{ city }}</button>
       }
     </div>
+    }
+
+    @if (locationError) {
+    <p class="recherche-cities__status" role="status">{{ 'results.locationDenied' | t }}</p>
     }
 
     <button type="button" class="recherche-skip" (click)="skipToAllResults()">

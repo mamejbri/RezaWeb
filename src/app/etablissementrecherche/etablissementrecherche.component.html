@@ -15,6 +15,18 @@
       {{ 'results.sortByRating' | t }}
     </button>
 
+    <button class="filter-chip" [class.filter-chip--active]="!!origin" type="button" [disabled]="locating"
+      [attr.aria-pressed]="!!origin" (click)="toggleNearMe()">
+      <span class="filter-chip__icon filter-chip__icon--near" aria-hidden="true"></span>
+      {{ (locating ? 'results.locating' : 'results.nearMe') | t }}
+    </button>
+
+    <button class="filter-chip" [class.filter-chip--active]="showMap" type="button" [attr.aria-pressed]="showMap"
+      (click)="toggleMap()">
+      <span class="filter-chip__icon filter-chip__icon--map" aria-hidden="true"></span>
+      {{ 'results.map' | t }}
+    </button>
+
     @for (group of filterGroups; track group.group) {
     <button class="filter-chip" [class.filter-chip--active]="selectedCount(group.group) > 0" type="button"
       (click)="openFilterGroup(group)">
@@ -33,6 +45,17 @@
     }
     }
   </section>
+
+  @if (locationError) {
+  <p class="search-notice" role="status">{{ 'results.locationDenied' | t }}</p>
+  }
+
+  @if (showMap && !error) {
+  <app-results-map [places]="etablissements" [origin]="origin" (selectPlace)="selectPlace($event)" />
+  @if (!loading && etablissements.length > 0 && !hasMappablePlaces) {
+  <p class="search-notice" role="status">{{ 'results.noLocations' | t }}</p>
+  }
+  }
 
   @if (activeFilterGroup) {
   <section class="filter-overlay" (click)="closeFilterDrawer()"></section>
@@ -77,7 +100,7 @@
   </section>
   } @else if (etablissements.length === 0) {
   <section class="empty-state">
-    <h2>{{ 'results.empty' | t }}</h2>
+    <h2>{{ (origin ? 'results.emptyNearby' : 'results.empty') | t }}</h2>
   </section>
   } @else {
   <section class="etablissement-grid">
@@ -97,6 +120,10 @@
           <span>📍</span>
           {{ etablissement.address }}
         </p>
+
+        @if (etablissement.distanceKm != null) {
+        <p class="etablissement-card__distance">{{ 'results.distance' | t: { km: (etablissement.distanceKm | number:'1.1-1') } }}</p>
+        }
 
         <p class="etablissement-card__rating">
           <span class="rating-star">★</span>

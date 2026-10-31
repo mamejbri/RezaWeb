@@ -6,6 +6,7 @@ import { catchError, of } from 'rxjs';
 
 import { ClientSessionService } from '../../services/client-session.service';
 import { EtablissementsService, RezaSearchType } from '../../services/etablissements.service';
+import { GeolocationService } from '../../services/geolocation.service';
 import { SeoService } from '../../services/seo.service';
 
 import { LanguageService } from '../../i18n/language.service';
@@ -40,11 +41,14 @@ export class RechercheComponent implements OnInit {
   private readonly clientSessionService = inject(ClientSessionService);
   private readonly etablissementsService = inject(EtablissementsService);
   private readonly seoService = inject(SeoService);
+  private readonly geolocation = inject(GeolocationService);
 
   selectedType: RezaSearchType = 'restaurant';
   searchText = '';
   cities: string[] = [];
   citiesLoading = true;
+  locating = false;
+  locationError = false;
 
   get typeConfig(): TypeConfig {
     return TYPE_CONFIG[this.selectedType];
@@ -86,6 +90,17 @@ export class RechercheComponent implements OnInit {
     this.goToResults();
   }
 
+  searchNearMe(): void {
+    this.locating = true;
+    this.locationError = false;
+
+    this.geolocation
+      .current()
+      .then(({ lat, lng }) => this.goToResults(undefined, { lat: lat.toFixed(5), lng: lng.toFixed(5) }))
+      .catch(() => (this.locationError = true))
+      .finally(() => (this.locating = false));
+  }
+
   private loadCities(): void {
     this.citiesLoading = true;
 
@@ -98,8 +113,8 @@ export class RechercheComponent implements OnInit {
       });
   }
 
-  private goToResults(city?: string): void {
-    const queryParams: Record<string, string> = { type: this.selectedType };
+  private goToResults(city?: string, position?: { lat: string; lng: string }): void {
+    const queryParams: Record<string, string> = { type: this.selectedType, ...position };
 
     const trimmedText = this.searchText.trim();
     if (trimmedText) {
