@@ -266,7 +266,7 @@ export const hi: Translations = {
     noEditableSlots: 'बुकिंग नियमों के अनुसार कोई स्लॉट नहीं चुना जा सकता।',
   },
   booking: {
-    notBookableOnline: 'ऑनलाइन बुक नहीं हो सकती',
+    notBookableOnline: 'ऑनलाइन बुक नहीं हो सकती: यह सेवा बुक करने के लिए प्रतिष्ठान से संपर्क करें।',
     practitioner: 'थेरेपिस्ट',
     anyPractitioner: 'कोई भी',
     withPractitioner: '{{name}} के साथ',

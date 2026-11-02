@@ -266,7 +266,7 @@ export const ja: Translations = {
     noEditableSlots: '予約ルール上、選択できる時間がありません。',
   },
   booking: {
-    notBookableOnline: 'オンライン予約不可',
+    notBookableOnline: 'オンライン予約不可：このメニューのご予約は店舗へお問い合わせください。',
     practitioner: '担当者',
     anyPractitioner: '指定なし',
     withPractitioner: '{{name}} が担当',

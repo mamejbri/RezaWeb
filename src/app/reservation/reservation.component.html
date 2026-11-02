@@ -120,7 +120,10 @@
                     }
                     <div class="booking-prestations__name">{{ prestation.nom }}</div>
                     @if (!isBookable(prestation)) {
-                    <div class="booking-prestations__unavailable">{{ 'booking.notBookableOnline' | t }}</div>
+                    <!-- "Affichée mais non réservable": listed with this message, cannot be chosen -->
+                    <div class="booking-prestations__unavailable" role="note">
+                      <span aria-hidden="true">ⓘ</span> {{ 'booking.notBookableOnline' | t }}
+                    </div>
                     }
                     @if (prestation.description) {
                     <div class="booking-prestations__description">{{ prestation.description }}</div>

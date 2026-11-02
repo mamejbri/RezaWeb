@@ -266,7 +266,7 @@ export const pt: Translations = {
     noEditableSlots: 'Nenhum horário pode ser selecionado pelas regras de reserva.',
   },
   booking: {
-    notBookableOnline: 'Não reservável online',
+    notBookableOnline: 'Não reservável online: contacte o estabelecimento para reservar este serviço.',
     practitioner: 'Profissional',
     anyPractitioner: 'Sem preferência',
     withPractitioner: 'com {{name}}',

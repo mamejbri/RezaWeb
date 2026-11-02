@@ -266,7 +266,7 @@ export const tr: Translations = {
     noEditableSlots: 'Rezervasyon kurallarına göre seçilebilecek saat yok.',
   },
   booking: {
-    notBookableOnline: 'Çevrimiçi rezerve edilemez',
+    notBookableOnline: 'Çevrimiçi rezerve edilemez: bu hizmeti rezerve etmek için işletmeyle iletişime geçin.',
     practitioner: 'Uzman',
     anyPractitioner: 'Fark etmez',
     withPractitioner: '{{name}} ile',

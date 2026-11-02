@@ -266,7 +266,7 @@ export const ar: Translations = {
     noEditableSlots: 'لا يوجد موعد قابل للتعديل وفق قواعد الحجز.',
   },
   booking: {
-    notBookableOnline: 'غير قابل للحجز عبر الإنترنت',
+    notBookableOnline: 'غير قابل للحجز عبر الإنترنت: تواصل مع المؤسسة لحجز هذه الخدمة.',
     practitioner: 'المعالج(ة)',
     anyPractitioner: 'لا يهم',
     withPractitioner: 'مع {{name}}',

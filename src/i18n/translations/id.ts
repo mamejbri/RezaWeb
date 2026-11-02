@@ -266,7 +266,7 @@ export const id: Translations = {
     noEditableSlots: 'Tidak ada jadwal yang dapat dipilih sesuai aturan pemesanan.',
   },
   booking: {
-    notBookableOnline: 'Tidak dapat dipesan online',
+    notBookableOnline: 'Tidak dapat dipesan online: hubungi tempat usaha untuk memesan layanan ini.',
     practitioner: 'Terapis',
     anyPractitioner: 'Siapa saja',
     withPractitioner: 'dengan {{name}}',

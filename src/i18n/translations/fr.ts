@@ -264,7 +264,7 @@ export const fr = {
     noEditableSlots: 'Aucun créneau modifiable selon les règles de réservation.',
   },
   booking: {
-    notBookableOnline: 'Non réservable en ligne',
+    notBookableOnline: 'Non réservable en ligne : contactez l\'établissement pour réserver cette prestation.',
     practitioner: 'Praticien(ne)',
     anyPractitioner: 'Peu importe',
     withPractitioner: 'avec {{name}}',

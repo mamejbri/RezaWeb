@@ -266,7 +266,7 @@ export const en: Translations = {
     noEditableSlots: 'No time slot can be selected under the booking rules.',
   },
   booking: {
-    notBookableOnline: 'Not bookable online',
+    notBookableOnline: 'Not bookable online: contact the establishment to book this service.',
     practitioner: 'Practitioner',
     anyPractitioner: 'No preference',
     withPractitioner: 'with {{name}}',

@@ -266,7 +266,7 @@ export const zh: Translations = {
     noEditableSlots: '根据预订规则，没有可选择的时段。',
   },
   booking: {
-    notBookableOnline: '不可在线预订',
+    notBookableOnline: '不可在线预订：请联系商家预订此服务。',
     practitioner: '技师',
     anyPractitioner: '不限',
     withPractitioner: '由 {{name}}',

@@ -499,14 +499,27 @@ button {
 .booking-prestations__item--unavailable,
 .booking-prestations__item--unavailable:hover {
   border-color: var(--reza-surface);
-  opacity: 0.55;
   cursor: not-allowed;
 }
 
+/* dim the prestation, not the message about it */
+.booking-prestations__item--unavailable > :not(.booking-prestations__unavailable) {
+  opacity: 0.5;
+}
+
 .booking-prestations__unavailable {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin: 6px 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(197, 51, 52, 0.08);
+  color: var(--reza-text, inherit);
   font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 4px;
+  line-height: 1.35;
+  text-align: start;
 }
 
 .booking-practitioner {

@@ -266,7 +266,7 @@ export const es: Translations = {
     noEditableSlots: 'Las reglas de reserva no permiten seleccionar ningún horario.',
   },
   booking: {
-    notBookableOnline: 'No reservable en línea',
+    notBookableOnline: 'No reservable en línea: contacte con el establecimiento para reservar este servicio.',
     practitioner: 'Profesional',
     anyPractitioner: 'Sin preferencia',
     withPractitioner: 'con {{name}}',

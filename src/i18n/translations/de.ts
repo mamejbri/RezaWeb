@@ -266,7 +266,7 @@ export const de: Translations = {
     noEditableSlots: 'Nach den Buchungsregeln kann kein Termin gewählt werden.',
   },
   booking: {
-    notBookableOnline: 'Nicht online buchbar',
+    notBookableOnline: 'Nicht online buchbar: Wenden Sie sich an die Einrichtung, um diese Leistung zu buchen.',
     practitioner: 'Behandler(in)',
     anyPractitioner: 'Egal',
     withPractitioner: 'mit {{name}}',

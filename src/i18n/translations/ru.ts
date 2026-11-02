@@ -266,7 +266,7 @@ export const ru: Translations = {
     noEditableSlots: 'По правилам бронирования нельзя выбрать ни одно время.',
   },
   booking: {
-    notBookableOnline: 'Нельзя забронировать онлайн',
+    notBookableOnline: 'Нельзя забронировать онлайн: свяжитесь с заведением, чтобы забронировать эту услугу.',
     practitioner: 'Специалист',
     anyPractitioner: 'Не важно',
     withPractitioner: 'с {{name}}',
