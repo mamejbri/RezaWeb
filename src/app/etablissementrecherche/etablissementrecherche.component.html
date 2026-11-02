@@ -47,7 +47,7 @@
   </section>
 
   @if (locationError) {
-  <p class="search-notice" role="status">{{ 'results.locationDenied' | t }}</p>
+  <p class="search-notice" role="status">{{ locationError | t }}</p>
   }
 
   @if (showMap && !error) {

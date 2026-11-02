@@ -45,7 +45,7 @@
     }
 
     @if (locationError) {
-    <p class="recherche-cities__status" role="status">{{ 'results.locationDenied' | t }}</p>
+    <p class="recherche-cities__status" role="status">{{ locationError | t }}</p>
     }
 
     <button type="button" class="recherche-skip" (click)="skipToAllResults()">

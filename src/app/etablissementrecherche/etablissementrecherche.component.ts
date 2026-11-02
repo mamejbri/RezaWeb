@@ -14,7 +14,7 @@ import {
   RezaSearchType
 } from '../../services/etablissements.service';
 import { FilterGroup, FilterGroupDto, FilterOption, FilterService } from '../../services/filter.service';
-import { GeolocationService, LatLng } from '../../services/geolocation.service';
+import { GeolocationService, LatLng, LocationError } from '../../services/geolocation.service';
 import { SeoService } from '../../services/seo.service';
 
 import { LanguageService } from '../../i18n/language.service';
@@ -63,7 +63,8 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   /** The client's position while "near me" is on; results are then sorted nearest first. */
   origin: LatLng | null = null;
   locating = false;
-  locationError = false;
+  /** i18n key of why the position could not be had, or null. */
+  locationError: string | null = null;
   showMap = false;
 
   get typeLabel(): string {
@@ -142,7 +143,7 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
   }
 
   toggleNearMe(): void {
-    this.locationError = false;
+    this.locationError = null;
 
     if (this.origin) {
       this.origin = null;
@@ -160,7 +161,7 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
         this.showMap = true;
         this.search();
       })
-      .catch(() => (this.locationError = true))
+      .catch((error) => (this.locationError = locationErrorKey(error)))
       .finally(() => (this.locating = false));
   }
 
@@ -362,4 +363,15 @@ export class EtablissementrechercheComponent implements OnInit, OnDestroy {
         return 'RESTAURANT';
     }
   }
+}
+
+/** The message for why the position could not be had. */
+function locationErrorKey(error: unknown): string {
+  const reason = error instanceof LocationError ? error.reason : 'unavailable';
+  return {
+    denied: 'results.locationDenied',
+    unavailable: 'results.locationUnavailable',
+    timeout: 'results.locationTimeout',
+    insecure: 'results.locationInsecure'
+  }[reason];
 }

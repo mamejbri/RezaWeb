@@ -6,7 +6,7 @@ import { catchError, of } from 'rxjs';
 
 import { ClientSessionService } from '../../services/client-session.service';
 import { EtablissementsService, RezaSearchType } from '../../services/etablissements.service';
-import { GeolocationService } from '../../services/geolocation.service';
+import { GeolocationService, LocationError } from '../../services/geolocation.service';
 import { SeoService } from '../../services/seo.service';
 
 import { LanguageService } from '../../i18n/language.service';
@@ -48,7 +48,8 @@ export class RechercheComponent implements OnInit {
   cities: string[] = [];
   citiesLoading = true;
   locating = false;
-  locationError = false;
+  /** i18n key of why the position could not be had, or null. */
+  locationError: string | null = null;
 
   get typeConfig(): TypeConfig {
     return TYPE_CONFIG[this.selectedType];
@@ -92,12 +93,12 @@ export class RechercheComponent implements OnInit {
 
   searchNearMe(): void {
     this.locating = true;
-    this.locationError = false;
+    this.locationError = null;
 
     this.geolocation
       .current()
       .then(({ lat, lng }) => this.goToResults(undefined, { lat: lat.toFixed(5), lng: lng.toFixed(5) }))
-      .catch(() => (this.locationError = true))
+      .catch((error) => (this.locationError = locationErrorKey(error)))
       .finally(() => (this.locating = false));
   }
 
@@ -127,4 +128,15 @@ export class RechercheComponent implements OnInit {
 
     void this.router.navigate(['/etablissementrecherche'], { queryParams });
   }
+}
+
+/** The message for why the position could not be had. */
+function locationErrorKey(error: unknown): string {
+  const reason = error instanceof LocationError ? error.reason : 'unavailable';
+  return {
+    denied: 'results.locationDenied',
+    unavailable: 'results.locationUnavailable',
+    timeout: 'results.locationTimeout',
+    insecure: 'results.locationInsecure'
+  }[reason];
 }
