@@ -60,3 +60,48 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # The image alone changed nothing: the VMs kept running the old container. Each push now
+  # recreates reza_web_client on its VM (dev -> reza-dev, master -> reza-prod) with the new image.
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && (github.ref_name == 'dev' || github.ref_name == 'master')
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name == 'master' && 'latest' || 'dev' }}
+      CANONICAL_HOST: ${{ github.ref_name == 'master' && 'client.booktareza.com' || '34.77.209.65' }}
+      VM_IP: ${{ github.ref_name == 'master' && secrets.PROD_GCP_VM_IP || secrets.DEV_GCP_VM_IP }}
+      VM_USER: ${{ github.ref_name == 'master' && secrets.PROD_GCP_VM_USER || secrets.DEV_GCP_VM_USER }}
+      VM_SSH_KEY: ${{ github.ref_name == 'master' && secrets.PROD_GCP_VM_SSH_KEY || secrets.DEV_GCP_VM_SSH_KEY }}
+
+    steps:
+      - name: Check the VM secrets are set
+        run: |
+          if [ -z "$VM_IP" ] || [ -z "$VM_USER" ] || [ -z "$VM_SSH_KEY" ]; then
+            echo "::error::Add the ${{ github.ref_name == 'master' && 'PROD' || 'DEV' }}_GCP_VM_IP / _USER / _SSH_KEY secrets to this repository (the same as reza_backend's)."
+            exit 1
+          fi
+
+      - name: Recreate reza_web_client on the VM
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ env.VM_IP }}
+          username: ${{ env.VM_USER }}
+          key: ${{ env.VM_SSH_KEY }}
+          envs: TAG,CANONICAL_HOST
+          script: |
+            set -e
+            DOCKER="docker"; $DOCKER ps >/dev/null 2>&1 || DOCKER="sudo docker"
+            IMG="${{ env.IMAGE_NAME }}:$TAG"
+
+            $DOCKER pull -q "$IMG"
+            $DOCKER rm -f reza_web_client >/dev/null 2>&1 || true
+            $DOCKER run -d --name reza_web_client --network reza_network -p 3001:80 --restart unless-stopped \
+              -e BACKEND_URL=http://reza_backend:8080 -e CANONICAL_HOST="$CANONICAL_HOST" -e SSR_PORT=4000 \
+              "$IMG"
+
+            sleep 15
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "Host: $CANONICAL_HOST" http://localhost:3001/)
+            echo "reza_web_client answers $code"
+            [ "$code" = 200 ]
+            $DOCKER image prune -f >/dev/null
