@@ -19,6 +19,7 @@ import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 import { authInterceptor } from '../services/auth.interceptor';
 import { LanguageService } from '../i18n/language.service';
+import { contentLanguageInterceptor } from '../i18n/content-language.interceptor';
 
 registerLocaleData(localeFr);
 registerLocaleData(localeArMa);
@@ -37,7 +38,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideClientHydration(),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(withInterceptors([contentLanguageInterceptor, authInterceptor])),
     { provide: LOCALE_ID, useFactory: (i18n: LanguageService) => i18n.locale, deps: [LanguageService] },
   ]
 };
